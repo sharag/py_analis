@@ -1,6 +1,5 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 import os
-import struct
 import numpy as np
 import pyqtgraph as pg
 import scipy.signal as sp_sig
