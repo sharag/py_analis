@@ -29,8 +29,11 @@ doc_win = [None] * form_surge.num_surge
 # Циклическое получение скачков, вычисление разладки и построение графиков
 for k in range(form_surge.num_surge):
 
+    if k != 6:
+        continue
     # Получение временного ряда со скачком
-    data, data_name, surge_list, surge_prop = form_surge.get_surge(bef_win_len + aft_win_len)
+    # data, data_name, surge_list, surge_prop = form_surge.get_surge(None, bef_win_len + aft_win_len)
+    data, data_name, surge_list, surge_prop = form_surge.get_surge(6, bef_win_len + aft_win_len)
 
     # Вычисление функции разладки
     prob = f_probability(data, bef_win_len, aft_win_len)
@@ -45,7 +48,7 @@ for k in range(form_surge.num_surge):
     graph_surge.showGrid(x=False, y=True)
     if surge_list is not None:
         for m in range(len(surge_list)):
-            text = pg.TextItem(html='<div style="text-align: center">Ширина ' + str(surge_prop[m]) + '</div>')
+            text = pg.TextItem(html='<div style="text-align: center">' + str(surge_prop[m]) + '</div>')
             # text = pg.TextItem(html='<div style="text-align: center">Ширина ' + str(surge_prop[m]) + '</div>',
             #                    anchor=(-0.3, 0.5), angle=0, border='k', fill=(0, 0, 255, 100))
             graph_surge.addItem(text)

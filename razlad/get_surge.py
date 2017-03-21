@@ -10,9 +10,9 @@ class FormSurge:
     def __init__(self):
         """ Инициализация класса """
         self.cur_surge = 0
-        self.num_surge = 5
+        self.num_surge = 7
 
-    def get_surge(self, win_len):
+    def get_surge(self, n_surge, win_len):
         """Функция, возвращающая при каждом вызове очередной скачок
         Принимаемый аргумент: win_len - задаваемая щирина окна
         Возвращаемые значения:
@@ -20,15 +20,17 @@ class FormSurge:
             название
             список моментов начала очередного скачка
             список характеристик скачков"""
+        if n_surge is not None:
+            self.cur_surge = n_surge
         if self.cur_surge == 0:
             """Первый скачок - скачок постоянной составляющей.
             Без входных аргументов. На выходе список на 1000 элементов."""
-            surge = [0] * (win_len + 100)
-            surge.extend([1] * (win_len + 100))
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
+            surge.extend([1] * (win_len + 100 - (win_len + 100) % 100))
             self.cur_surge += 1
             return surge, 'Скачок постоянной составляющей', None, None
         elif self.cur_surge == 1:
-            surge = [0] * (win_len + 100)
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
             surge_list = []
             surge_prop = []
             for i in range(10, win_len + win_len//2, win_len//10):
@@ -39,13 +41,22 @@ class FormSurge:
             self.cur_surge += 1
             return surge, 'Кратковременные скачки постоянной составляющей', surge_list, surge_prop
         elif self.cur_surge == 2:
-            surge = [0] * (win_len + 100)
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
             surge_list = []
             surge_prop = []
             for i in range(10, win_len + win_len // 2, win_len // 10):
                 surge_list.append(len(surge))
                 surge_prop.append(i)
-                surge.extend([x /i for x in range(i)])
+                surge.extend([x / i for x in range(i)])
+                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([1 - x / i for x in range(i)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            for i in range(win_len + win_len // 2, win_len * 10, win_len // 2):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([x / i for x in range(i)])
                 surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
                 surge_list.append(len(surge))
                 surge_prop.append(i)
@@ -54,7 +65,7 @@ class FormSurge:
             self.cur_surge += 1
             return surge, 'Линейные изменения постоянной составляющей', surge_list, surge_prop
         elif self.cur_surge == 3:
-            surge = [0] * (win_len + 100)
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
             surge_list = []
             surge_prop = []
             for i in range(10, win_len + win_len // 2, win_len // 10):
@@ -62,29 +73,74 @@ class FormSurge:
                 surge_prop.append(i)
                 surge.extend([x / i for x in range(i)])
                 surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            for i in range(win_len + win_len // 2, win_len * 10, win_len // 2):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([x / i for x in range(i)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
             self.cur_surge += 1
             return surge, 'Линейное изменение постоянной составляющей и сброс', surge_list, surge_prop
         elif self.cur_surge == 4:
+            max_point = 1000
+            min_point = 5
+            step = 10
             surge_list = []
             surge_prop = []
             surge_list.append(0)
-            surge_prop.append(10)
-            surge = [np.sin(x / 10) for x in range(win_len * 2)]
-            for i in range(100, 10000, 100):
+            surge_prop.append(min_point)
+            surge = [np.sin(x) for x in np.linspace(-np.pi, np.pi, min_point)[0:-1]]
+            for i in range(min_point, 100, 1):
                 surge_list.append(len(surge))
-                surge_prop.append(100 + i)
-                surge.extend([np.sin(x / (100 + i)) for x in range(win_len * 2)])
-                n = len(surge)
-                x = win_len * 2
-                while True:
-                    x += 1
-                    n += 1
-                    surge.extend([np.sin(x / (2 + i))])
-                    if surge[-2] < 0 and surge[-1] >= 0:
-                        del(surge[-1])
-                        break
+                surge_prop.append(i)
+                surge.extend([np.sin(x) for x in np.linspace(-np.pi, np.pi, i)[0:-1]])
+            for i in range(100, max_point, step):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([np.sin(x) for x in np.linspace(-np.pi, np.pi, i)[0:-1]])
             self.cur_surge += 1
-            return surge, 'Гармонические колебания с изменяемой ступенчато частотой', surge_list, surge_prop
+            return surge, 'Гармонические колебания с изменяемой частотой', surge_list, surge_prop
+        elif self.cur_surge == 5:
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
+            surge_list = []
+            surge_prop = []
+            for i in range(10, win_len + win_len // 2, 10):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
+                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
+                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
+                surge.extend([1 - (((x * 2 / i) ** 2) / 2) for x in range(i // 2)])
+                surge.extend([1 - ((1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5) for x in range(i // 2)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            for i in range(win_len + win_len // 2, 2000, win_len // 2):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
+                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
+                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
+                surge.extend([1 - (((x * 2 / i) ** 2) / 2) for x in range(i // 2)])
+                surge.extend([1 - ((1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5) for x in range(i // 2)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            self.cur_surge += 1
+            return surge, 'Нелинейное изменение постоянной составляющей 2 порядка', surge_list, surge_prop
+        elif self.cur_surge == 6:
+            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
+            surge_list = []
+            surge_prop = []
+            for i in range(10, win_len + win_len // 2, 10):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
+                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            for i in range(win_len + win_len // 2, 2000, win_len // 2):
+                surge_list.append(len(surge))
+                surge_prop.append(i)
+                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
+                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
+                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
+            self.cur_surge += 1
+            return surge, 'Нелинейное изменение постоянной составляющей 2 порядка и сброс', surge_list, surge_prop
         else:
             return None, None
 
