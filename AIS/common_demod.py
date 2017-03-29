@@ -1,6 +1,8 @@
+#!/usr/bin/python3.5
 import sys
 import glob
 import argparse
+import os
 from subprocess import Popen, PIPE, SubprocessError
 
 
@@ -30,11 +32,14 @@ if __name__ == '__main__':
     namespace.demodpath = demodpath
     del demodpath
     if namespace.recursive:
-        filesList = glob.glob(namespace.inpath + '**\\*.iq', recursive=True)
+        filesList = glob.glob(namespace.inpath + '**//*.iq', recursive=True)
     else:
         filesList = glob.glob(namespace.inpath + '*.iq', recursive=False)
+        print(namespace.inpath + '*.iq')
     if len(filesList) < 1:
         raise BaseException('In the catalog a little of files.')
+    filesList.sort()
+    print(filesList)
     numfile = 0
     fid_out = open(namespace.inpath + 'rezult.txt', 'w')
     for fileName in filesList:
@@ -43,16 +48,19 @@ if __name__ == '__main__':
         try:
             child_proc = Popen([namespace.demodpath, '-v', '-m', '8', '-o', '0.48', '-d', '0.02', '-F', '2400000',
                                 '-f', fileName, '162050', '161975', '162025'], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                               creationflags=8)
+                               shell=False)
             [out_bytes, err_bytes] = child_proc.communicate(timeout=3600)
         except SubprocessError as err:
             print(err)
         out_txt = out_bytes.decode('cp1251')
-        fid_out.write('\r\nFile number: ' + str(numfile) + '/' + str(len(filesList)) + '\r\n')
-        fid_out.write('File name: ' + fileName + '\r\n')
+        text = '\r\nFile number: ' + str(numfile) + '/' + str(len(filesList)) + '\r\n'
+        fid_out.write(text)
+        print(text)
+        text = 'File name: ' + fileName + '\r\n'
+        fid_out.write(text)
+        print(text)
+        del text
         fid_out.write(out_txt)
         print(out_txt)
         fid_out.flush()
     fid_out.close()
-
-

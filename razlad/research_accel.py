@@ -7,6 +7,7 @@ import numpy as np
 from razlad.get_surge import FormSurge, f_probability_dyach, f_probability
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.dockarea import *
+import struct
 
 
 app = QtGui.QApplication([])
@@ -19,13 +20,18 @@ pg.setConfigOptions(antialias=True)
 # Открываем файл режимов
 in_fid = open('e:\\git\\signals\\1', mode='rb')
 data_raw = in_fid.read()
-in_fid.close()
+#in_fid.close()
 # Преобразуем к установленному формату
-if len(data_raw) % 2 == 0:
-    data = np.fromstring(data_raw, dtype=np.int16)
-else:
-    data = np.fromstring(data_raw[0:-1], dtype=np.int16)
+#if len(data_raw) % 2 == 0:
+#    data = np.fromstring(data_raw, dtype=np.int16)
+#else:
+#    data = np.fromstring(data_raw[0:-1], dtype=np.int16)
+#del data_raw
+data = [0] * (len(data_raw) // 2)
+for i in range(1, len(data_raw), 2):
+    data[(i - 1) / 2] = struct.unpack('h', data_raw[i - 1:i])
 del data_raw
+
 # Параметры разладки
 # tresholds = 200  # Порог отношения правдоподобия
 bef_win_len = 160  # длина окна до скачка

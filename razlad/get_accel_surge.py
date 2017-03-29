@@ -4,7 +4,6 @@ from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.dockarea import *
 import scipy.signal as sp_sig
 from os import path
-#from pyqtgraph.Point import Point
 
 app = QtGui.QApplication([])
 # Настройка графика
@@ -82,7 +81,8 @@ def save_file():
         else:
             break
     f_id = open(name, mode='wb')
-    f_id.write(data[int(minX * 400), int(maxX * 400)])
+    f_id.write(data[int(minX * 10): int(maxX * 10)])
+    f_id.close()
 
 saveBtn.clicked.connect(save_file)
 layout.addWidget(saveBtn, row=1, col=0)
