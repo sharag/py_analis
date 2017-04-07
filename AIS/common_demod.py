@@ -35,16 +35,13 @@ if __name__ == '__main__':
         filesList = glob.glob(namespace.inpath + '**//*.iq', recursive=True)
     else:
         filesList = glob.glob(namespace.inpath + '*.iq', recursive=False)
-        print(namespace.inpath + '*.iq')
     if len(filesList) < 1:
         raise BaseException('In the catalog a little of files.')
     filesList.sort()
-    print(filesList)
     numfile = 0
     fid_out = open(namespace.inpath + 'rezult.txt', 'w')
     for fileName in filesList:
         numfile += 1
-        rezult = ''
         try:
             child_proc = Popen([namespace.demodpath, '-v', '-m', '8', '-o', '0.48', '-d', '0.02', '-F', '2400000',
                                 '-f', fileName, '162050', '161975', '162025'], stdin=PIPE, stdout=PIPE, stderr=PIPE,

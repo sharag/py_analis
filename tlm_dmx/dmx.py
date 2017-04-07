@@ -15,7 +15,9 @@ from bitreader import Bitreader
 #  [MARKERS]    - 8   // [[MARKERID, BITLEN, MVALUE, BITOFFSET],следующий маркер, ...] если маркеров нет, то ''
 #  ],
 #  следующий коммутатор, ...]      
-#  
+#
+
+
 class Demuxer:
     def __init__(self, channels, lvl_commut, fname_gts, revers):
         self.channels = channels

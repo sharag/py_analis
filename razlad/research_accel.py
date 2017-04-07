@@ -67,7 +67,7 @@ leg.addItem(plot_klass, 'Классика')
 leg.addItem(plot_dyach, 'Дяченко')
 leg.setParentItem(graph_prob.graphicsItem())
 
-# Создадим вкладки и добавим из на окошко
+# Создадим вкладки и добавим их на окошко
 d_graph_surge = Dock('График скачка', size=(500, 300), closable=False)
 d_graph_surge.addWidget(graph_surge)
 d_graph_prob = Dock('График отношения правдободобия', size=(500, 300), closable=False)
