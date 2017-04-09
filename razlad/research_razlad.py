@@ -29,11 +29,11 @@ doc_win = [None] * form_surge.num_surge
 # Циклическое получение скачков, вычисление разладки и построение графиков
 for k in range(form_surge.num_surge):
 
-    if k != 6:
-        continue
+    #if k != 6:
+        #continue
     # Получение временного ряда со скачком
     # data, data_name, surge_list, surge_prop = form_surge.get_surge(None, bef_win_len + aft_win_len)
-    data, data_name, surge_list, surge_prop = form_surge.get_surge(6, bef_win_len + aft_win_len)
+    data, data_name, surge_list, surge_prop = form_surge.get_surge(k, bef_win_len + aft_win_len)
 
     # Вычисление функции разладки
     prob = f_probability(data, bef_win_len, aft_win_len)
