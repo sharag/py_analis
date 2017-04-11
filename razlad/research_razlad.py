@@ -4,7 +4,7 @@
 
 import pyqtgraph as pg
 import numpy as np
-from razlad.get_surge import FormSurge, f_probability_dyach, f_probability
+from razlad.functions import FormSurge, f_probability_dyach, f_probability
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.dockarea import *
 

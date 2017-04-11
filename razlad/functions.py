@@ -2,6 +2,7 @@
 Модуль формирования скачков
 """
 import numpy as np
+import copy
 
 
 class FormSurge:
@@ -193,6 +194,141 @@ def f_probability_dyach(data_, gr_win_len, sm_win_len):
         # Расчет отношения правдоподобия
         probability[i] = (mean_small - mean_great)*summ/var_all
     return probability
+
+
+def max_probabil(signal, win_size, surge_len, step_win):
+    len_win_x = np.arange(step_win, win_size, step_win)
+    len_win_bef = np.arange(int(step_win/2), win_size - int(step_win/2), int(step_win/2))
+    max_prob = np.zeros([len(len_win_x), len(len_win_bef)])
+    # bef_aft = np.zeros([])
+    # bef_surge = np.zeros([])
+    # aft_surge = np.zeros([])
+    for len_win_ind in range(len(len_win_x)):
+        for len_win_bef_ind in range(len(len_win_bef)):
+            if len_win_x[len_win_ind] - len_win_bef[len_win_bef_ind] < 2:
+                continue
+            if len_win_bef[len_win_bef_ind] < len_win_x[len_win_ind] // 2:
+                continue
+            len_win_aft = len_win_x[len_win_ind] - len_win_bef[len_win_bef_ind]
+            # bef_aft = np.append(bef_aft, len_win_bef[len_win_bef_ind] / len_win_aft)
+            # bef_surge = np.append(bef_surge, [len_win_bef[len_win_bef_ind] / surge_len])
+            # aft_surge = np.append(aft_surge, [len_win_aft / surge_len])
+            max_prob[len_win_ind][len_win_bef_ind] = \
+                max(f_probability(signal, len_win_bef[len_win_bef_ind], len_win_aft))
+    return len_win_x, len_win_bef, max_prob
+
+
+def add_nois(sig_, p):
+    sig = copy.copy(sig_)
+    if p == 0:
+        return sig
+    num_rand = int(round(len(sig)*p + 0.5))
+    n_sample = np.random.randint(0, len(sig), num_rand)
+    for i in range(len(n_sample)):
+        sig[n_sample[i]] = np.random.random()
+    return sig
+
+
+def test_probability_list(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
+    if len(indexes_skach):
+        num_skach = 1
+    else:
+        return
+    for l in range(1, len(indexes_skach)):
+        if indexes_skach[l] - indexes_skach[l-1] > 1:
+            num_skach += 1
+    num_po = list()  # Правильное обнаружение
+    num_lt = list()  # Ложная тревога
+    num_pc = list()  # Пропуск цели
+    for i in range(num_test):  # Испытания
+        signal = add_nois(insignal, p)
+        prob = f_probability(signal, win_bef, win_aft)
+        k = 0
+        num_po.append(0)
+        num_lt.append(0)
+        num_pc.append(0)
+        while True:  # Проверяем превышение порога функцией правдоподобия
+            if k >= len(prob):
+                break
+            if prob[k] < porog:
+                k += 1
+                continue
+            else:  # Подсчитываем индексы значений функциии правдоподобия, превышающих порог
+                indexes_prob = list()
+                while prob[k] > porog:
+                    if k >= len(prob):
+                        break
+                    indexes_prob.append(k + win_bef)
+                    k += 1
+                # Сверяем обнаруженные индексы с индексами скачка
+                obn = False
+                for ind in indexes_prob:
+                    if ind in indexes_skach:
+                        obn = True
+                        break
+                # принимаем решение: обнаружение или ложная тревога
+                if obn:
+                    num_po[-1] += 1
+                else:
+                    num_lt[-1] += 1
+        if num_po[-1] < num_skach:
+            num_pc[-1] = num_skach - num_po[-1]
+        if num_po[-1] > num_skach:
+            num_lt[-1] += num_po[-1] - num_skach
+    return num_po, num_lt, num_pc
+
+
+def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
+    if len(indexes_skach):
+        num_skach = 1
+    else:
+        return
+    for l in range(1, len(indexes_skach)):
+        if indexes_skach[l] - indexes_skach[l-1] > 1:
+            num_skach += 1
+    num_po = 0  # Правильное обнаружение
+    num_lt = 0  # Ложная тревога
+    num_pc = 0  # Пропуск цели
+    for i in range(num_test):  # Испытания
+        signal = add_nois(insignal, p)
+        prob = f_probability(signal, win_bef, win_aft)
+        k = 0
+        num_po_test = 0  # Правильное обнаружение
+        num_lt_test = 0  # Ложная тревога
+        num_pc_test = 0  # Пропуск цели
+        while True:  # Проверяем превышение порога функцией правдоподобия
+            if k >= (len(prob)-1):
+                break
+            if prob[k] < porog:
+                k += 1
+                continue
+            else:  # Подсчитываем индексы значений функциии правдоподобия, превышающих порог
+                indexes_prob = list()
+                while prob[k] > porog:
+                    if k >= (len(prob)-1):
+                        break
+                    indexes_prob.append(k + win_bef)
+                    k += 1
+                # Сверяем обнаруженные индексы с индексами скачка
+                obn = False
+                for ind in indexes_prob:
+                    if ind in indexes_skach:
+                        obn = True
+                        break
+                # принимаем решение: обнаружение или ложная тревога
+                if obn:
+                    num_po_test += 1
+                else:
+                    num_lt_test += 1
+        if num_po_test < num_skach:
+            num_pc_test = num_skach - num_po_test
+        if num_po_test > num_skach:
+            num_lt_test += num_po_test - num_skach
+            num_po_test = num_skach
+        num_po += num_po_test
+        num_lt += num_lt_test
+        num_pc += num_pc_test
+    return num_po, num_lt, num_pc
 
 if __name__ == '__main__':
     """Функция служит для тестирования модуля"""

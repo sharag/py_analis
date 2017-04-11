@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 import numpy as np
-from razlad.get_surge import FormSurge
+from razlad.functions import FormSurge
 from pyqtgraph.Qt import QtCore, QtGui
 
 # Настройка графика
