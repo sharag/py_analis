@@ -37,11 +37,13 @@ for fname in fnames:
     del data_raw
 # Поиск скачков и сохранение индексов
 indexes_skach = [[0, []], [0, []], [0, []]]
-porogs = [200, 2500, 500]
+porogs = [650, 2500, 1500]
+begin_sig = 1800
+end_sig = 8250
 for i in range(3):
-    k = 0
+    k = begin_sig
     while True:
-        if k >= len(data[i]):
+        if k >= end_sig:
             break
         if abs(data[i][k]) <= porogs[i]:
             k += 1
@@ -49,7 +51,7 @@ for i in range(3):
         else:
             indexes_skach[i][0] += 1
             while abs(data[i][k]) > porogs[i]:
-                if k >= len(data[i]):
+                if k >= end_sig:
                     break
                 indexes_skach[i][1].append(k)
                 k += 1
@@ -73,7 +75,7 @@ for porog in porog_array:
     num_lt_mean = 0
     num_pc_mean = 0
     for i in range(3):
-        num_po_, num_lt_, num_pc_ = test_probability(num_test, data[i], win_bef, win_aft, porog, indexes_skach[i][1],
+        num_po_, num_lt_, num_pc_ = test_probability(num_test, data[i][begin_sig:end_sig], win_bef, win_aft, porog, indexes_skach[i][1],
                                                      p_osh)
         num_po_mean += num_po_
         num_lt_mean += num_lt_

@@ -61,16 +61,16 @@ for fname in fnames:
     del data_
     del data_raw
 
-plt.figure(1)
-plt.subplot(1, 1, 1)
-plt.plot(data[2], linewidth=2)
-plt.plot(data_mode*500, linewidth=2)
-plt.grid(True)
-plt.show()
+#plt.figure(1)
+#plt.subplot(1, 1, 1)
+#plt.plot(data[2], linewidth=2)
+#plt.plot(data_mode*500, linewidth=2)
+#plt.grid(True)
+#plt.show()
 
 # Поиск скачков и сохранение индексов
 indexes_skach = [[0, []], [0, []], [0, []]]
-porogs = [500, 2500, 500]
+porogs = [650, 2500, 1500]
 for i in range(3):
     k = 0
     while True:
@@ -96,7 +96,8 @@ for i in range(3):
             graph[i][k] = 0
 plt.figure(2)
 plt.subplot(1, 1, 1)
-plt.plot(data[2], linewidth=2)
-plt.plot(graph[2], linewidth=2)
+plt.plot(data[2], linewidth=1)
+plt.plot(graph[2], linewidth=1)
+plt.plot(data_mode*500, linewidth=1)
 plt.grid(True)
 plt.show()
