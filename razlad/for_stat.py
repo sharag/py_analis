@@ -55,38 +55,43 @@ with open('for_stat.pickle', 'wb') as f:
     pickle.dump(surges, f)
 
 plt.figure(1)
-plt.subplot(1, 1, 1)
+ax = plt.subplot(1, 1, 1)
 plt.plot(surge_ps, linewidth=1)
-plt.plot(surge_lin_ps, linewidth=1)
 plt.plot(surge_lin_ps, linewidth=1)
 plt.plot(surge_x2, linewidth=1)
 plt.grid(True)
+for label in ax.get_xticklabels() + ax.get_yticklabels():
+    label.set_fontsize(16)
+
+#plt.xscale('log')
 plt.show()
 
+# Подбор размеров окна
+with open('for_stat.pickle', 'rb') as f:
+    surges = pickle.load(f)
 
 # Характеристики окна
 win_size = 200
+
 # скачок постоянной составляющей
-len_win, len_win_bef, probabl_ps = max_probabil(surge_ps, win_size, surge_len, 1)
+len_win, len_win_bef, probabl_ps = max_probabil(surge_ps, win_size, surge_len, 2)
 x_mesh_bef_ps, y_mesh_bef_ps = np.meshgrid(len_win, len_win_bef)
 
 # линейное изменение постоянной составляющей
-len_win, len_win_bef, probabl_lin_ps = max_probabil(surge_lin_ps, win_size, surge_len, 1)
+len_win, len_win_bef, probabl_lin_ps = max_probabil(surge_lin_ps, win_size, surge_len, 2)
 x_mesh_bef_lin_ps, y_mesh_bef_lin_ps = np.meshgrid(len_win, len_win_bef)
 
-# нелинейное изменение постоянной составляющей
-#len_win, len_win_bef, probabl_x2_ps = max_probabil(surge_x2_ps, win_size, surge_len)
-#x_mesh_bef_x2_ps, y_mesh_bef_x2_ps = np.meshgrid(len_win, len_win_bef)
-
 # нелинейное изменение постоянной составляющей и обратно
-#len_win, len_win_bef, probabl_x2_ps_obr = max_probabil(surge_x2_ps_obr, win_size, surge_len)
-#x_mesh_bef_x2_ps_obr, y_mesh_bef_x2_ps_obr = np.meshgrid(len_win, len_win_bef)
+len_win, len_win_bef, probabl_x2_ps_obr = max_probabil(surge_x2, win_size, surge_len, 2)
+x_mesh_bef_x2, y_mesh_bef_x2 = np.meshgrid(len_win, len_win_bef)
+
 
 # скачок постоянной составляющей
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
 # Plot the surface.
-surf = ax.plot_surface(x_mesh_bef_ps, y_mesh_bef_ps, probabl_ps.transpose(), cmap=cm.seismic, linewidth=2, antialiased=True)
+surf = ax.plot_surface(x_mesh_bef_ps, y_mesh_bef_ps, probabl_ps.transpose(), cmap=cm.seismic, linewidth=2,
+                       antialiased=True)
 # Customize the z axis.
 #ax.set_zlim(-1.01, 1.01)
 ax.zaxis.set_major_locator(LinearLocator(10))

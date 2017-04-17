@@ -54,11 +54,11 @@ pg.setConfigOption('foreground', 'k')
 pg.setConfigOptions(antialias=True)
 # Список окон
 doc_graph = None
-w_graph_slot = pg.PlotWidget(title='Смещение начала сообщения относиетльно границ слота')
+w_graph_slot = pg.PlotWidget(title='Смещение начала сообщения относительно границ слота')
 w_graph_slot.showGrid(x=False, y=True)
 pen = pg.mkPen(color='b')
 w_graph_slot.plot(y=offset, x=slot_num, pen=pen)
-d_graph_slot = Dock('Смещение начала сообщения относиетльно границ слота', size=(500, 300), closable=False)
+d_graph_slot = Dock('Смещение начала сообщения относительно границ слота', size=(500, 300), closable=False)
 d_graph_slot.addWidget(w_graph_slot)
 
 w_graph_delta = pg.PlotWidget(title='Модуль разности смещений')
