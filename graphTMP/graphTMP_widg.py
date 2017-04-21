@@ -1,27 +1,64 @@
-import os
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QAbstractItemView
+# import os
+from PyQt5.QtWidgets import QWidget, QPushButton, QComboBox, QHBoxLayout, QVBoxLayout, QAbstractItemView
 from PyQt5.QtWidgets import QGroupBox, QLabel, QSizePolicy, QTableWidget, QTableWidgetItem
 from PyQt5.QtWidgets import QSpinBox, QFileDialog, QMessageBox, QHeaderView
-
-
 import pyqtgraph as pg
-import numpy as np
-from cyclogramMODE.cyclogramMODE_thread import CyclogrModeThread
+# import numpy as np
+from graphTMP.graphTMP_thread import GraphTMPThread
 
 
-class CyclogrModeMainWidg(QWidget):
-    def __init__(self, path, num_order):
+class GraphTMPMainWidg(QWidget):
+    def __init__(self, path, type_data, sign, freq):
         super().__init__()
         self.init_var()
         self.init_ui()
+        #self.ComLine_init(path, path, type_data, sign, freq)
 
     def init_var(self):
-        self.fname = None
-        self.num_order = None
-        self.thread = None
+        self.fnames = [None, None, None, None, None, None]
+        self.data_types = [None, None, None, None, None, None]
+        self.signs = [None, None, None, None, None, None]
+        self.freqs = [None, None, None, None, None, None]
 
     def init_ui(self):
+        self.gbox_files = []
+        self.btn_open_files = []
+        self.combo_d_types = []
+        for i in range(6):
+            self.gbox_files.append(QGroupBox('Файл №' + str(i + 1)))
 
+            self.btn_open_files.append(QPushButton('Файл ...'))
+            self.btn_open_files[-1].resize(self.btn_open_files[-1].sizeHint())
+            # self.btn_open_file1.clicked.connect(self.show_dlg_path)
+            self.btn_open_files[-1].setStatusTip('Выбор файла №' + str(i + 1))
+
+            self.combo_d_types.append(QComboBox(self))
+            self.combo_d_types[-1].setMinimumWidth(40)
+            self.combo_d_types[-1].setStatusTip('Выберите тип данных')
+            self.combo_d_types[-1].addItems(['int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64',
+                                             'float', 'double'])
+
+
+
+
+"""        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+    def init_ui(self):
         # Описание модуля
         self.lbl_descr = self.lbl_descr_init()
 
@@ -60,6 +97,17 @@ class CyclogrModeMainWidg(QWidget):
         # Управление макетом
         self.cur_layout = self.layout_init()
         self.setLayout(self.cur_layout)
+
+    def com_line_init(self, path, num_order, sign, freq):
+        # Донастройка параметров командной строки
+        if path is None or num_order is None or sign is None or freq is None:
+            return
+        self.fnames[0] = path
+        self.num_orders[0] = num_order
+        self.signs[0] = sign
+        self.freqs[0] = freq
+        # запуск задачи
+        self.start_SBitChange_thread()
 
     def lbl_descr_init(self):
         descr = '<div align="center">Программа расчета циклограммы полета БР по каналу режимов.</div>'
@@ -114,7 +162,7 @@ class CyclogrModeMainWidg(QWidget):
                 self.thread = None
             self.num_order = self.get_numord()
             self.setStatusTip('Идет обработка...')
-            self.thread = CyclogrModeThread(self.fname, self.num_order, self.grafik)
+            self.thread = GraphTMPThread(self.fname, self.num_order, self.grafik)
             self.thread.s_error[str].connect(self.showDlgErr)
             self.thread.finished.connect(self.finished_cyclogr_mode_thread)
             self.thread.s_mode.connect(self.update_table)
@@ -274,3 +322,4 @@ class CyclogrModeMainWidg(QWidget):
         hbox_common.addLayout(vbox_left)
         hbox_common.addLayout(vbox_right)
         return hbox_common
+"""
