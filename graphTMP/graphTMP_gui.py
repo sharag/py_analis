@@ -4,9 +4,9 @@ import argparse
 from PyQt5.QtWidgets import QApplication
 
 # -------------------- NEEDED
-from os.path import dirname, join, abspath
-import sys, os
-sys.path.append(abspath(join(dirname(__file__), '..')))
+#from os.path import dirname, join, abspath
+#import sys, os
+#sys.path.append(abspath(join(dirname(__file__), '..')))
 #---------------------------------
 
 from graphTMP.graphTMP_win import GraphTMPMainWin
