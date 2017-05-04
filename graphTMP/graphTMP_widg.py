@@ -1,318 +1,292 @@
-# import os
-from PyQt5.QtWidgets import QWidget, QPushButton, QComboBox, QHBoxLayout, QVBoxLayout, QAbstractItemView
-from PyQt5.QtWidgets import QGroupBox, QLabel, QSizePolicy, QTableWidget, QTableWidgetItem
-from PyQt5.QtWidgets import QSpinBox, QFileDialog, QMessageBox, QHeaderView
+import os
+from PyQt5.QtWidgets import QWidget, QPushButton, QComboBox, QHBoxLayout, QVBoxLayout, QDoubleSpinBox, QLabel
+from PyQt5.QtWidgets import QGroupBox, QCheckBox, QFileDialog, QMessageBox
 import pyqtgraph as pg
-# import numpy as np
+from pyqtgraph.dockarea import *
 from graphTMP.graphTMP_thread import GraphTMPThread
+# import numpy as np
+# from PyQt5.QtWidgets import QSizePolicy, QTableWidget, QTableWidgetItem
+# from PyQt5.QtWidgets import QSpinBox, QHeaderView, QAbstractItemView
 
 
 class GraphTMPMainWidg(QWidget):
-    def __init__(self, path, type_data, sign, freq):
+    def __init__(self, path, type_data, freq):
         super().__init__()
         self.init_var()
         self.init_ui()
-        #self.ComLine_init(path, path, type_data, sign, freq)
+        self.thread = GraphTMPThread(self.grafik, self.type_list)
+        self.thread.s_error[str].connect(show_dlg_err)
+        self.thread.start()
+        # self.ComLine_init(path, type_data, freq)
+
+    def __del__(self):
+        self.thread.terminate = True
 
     def init_var(self):
+        self.fpath = [None, None, None, None, None, None]
         self.fnames = [None, None, None, None, None, None]
         self.data_types = [None, None, None, None, None, None]
-        self.signs = [None, None, None, None, None, None]
         self.freqs = [None, None, None, None, None, None]
+        self.type_list = ['int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64', 'float32',
+                          'double64']
 
     def init_ui(self):
         self.gbox_files = []
         self.btn_open_files = []
         self.combo_d_types = []
+        self.lbl_d_types = []
+        self.lbl_freq = []
+        self.lbl_path = []
+        self.spin_freq = []
         for i in range(6):
             self.gbox_files.append(QGroupBox('Файл №' + str(i + 1)))
 
             self.btn_open_files.append(QPushButton('Файл ...'))
             self.btn_open_files[-1].resize(self.btn_open_files[-1].sizeHint())
-            # self.btn_open_file1.clicked.connect(self.show_dlg_path)
+            self.btn_open_files[-1].clicked.connect(self.show_dlg_path)
             self.btn_open_files[-1].setStatusTip('Выбор файла №' + str(i + 1))
 
+            self.lbl_path.append(QLabel(''))
+            self.lbl_path[-1].setMinimumWidth(150)
+            self.lbl_path[-1].setWordWrap(True)
+            self.lbl_path[-1].setMaximumWidth(300)
+
+            self.lbl_d_types.append(QLabel('Тип данных'))
             self.combo_d_types.append(QComboBox(self))
-            self.combo_d_types[-1].setMinimumWidth(40)
+            self.combo_d_types[-1].setMinimumWidth(60)
             self.combo_d_types[-1].setStatusTip('Выберите тип данных')
-            self.combo_d_types[-1].addItems(['int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64',
-                                             'float', 'double'])
+            self.combo_d_types[-1].addItems(self.type_list)
+            self.combo_d_types[-1].activated.connect(self.update_set_graph)
 
+            self.lbl_freq.append(QLabel('Частота дискретизации'))
+            self.spin_freq.append(QDoubleSpinBox(self))
+            self.spin_freq[-1].setMinimumWidth(80)
+            self.spin_freq[-1].setMaximumWidth(80)
+            self.spin_freq[-1].setSingleStep(0.1)
+            self.spin_freq[-1].setMaximum(32000.0)
+            self.spin_freq[-1].setMinimum(0.00001)
+            self.spin_freq[-1].setValue(100.0)
+            self.spin_freq[-1].setDecimals(5)
+            self.spin_freq[-1].editingFinished.connect(self.update_set_graph)
+            self.spin_freq[-1].setStatusTip('Введите частоту дискретизации ТМП')
 
-
-
-"""        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-    def init_ui(self):
-        # Описание модуля
-        self.lbl_descr = self.lbl_descr_init()
-
-        # Настройка параметров поиска
-        self.gbox_path = QGroupBox('Выберите файл с каналом режимов...')
-        self.gbox_path.setMaximumWidth(600)
-        self.btn_path = self.btn_path_init()
-        self.lbl_path = QLabel('')
-        self.lbl_path.setWordWrap(True)
-        self.lbl_path.setMaximumWidth(600)
-        self.lbl_numord = QLabel('Количество разрядов телеметрического канала')
-        self.spin_numord = self.spin_numord_init()
+        self.gbox_setting = QGroupBox('Настройка отображения графиков')
+        self.gbox_graph = []
+        self.lbl_graph1 = []
+        self.lbl_graph2 = []
+        self.combo_graph1 = []
+        self.combo_graph2 = []
+        self.lbl_link1 = []
+        self.lbl_link2 = []
+        self.check_link1 = []
+        self.check_link2 = []
+        for i in range(3):
+            self.gbox_graph.append(QGroupBox('Вкладка №' + str(i + 1)))
+            self.lbl_graph1.append(QLabel('<font color="blue">Синий график</font>'))
+            self.lbl_graph2.append(QLabel('<font color="red">Красный график</font>'))
+            self.combo_graph1.append(QComboBox(self))
+            self.combo_graph1[-1].setMinimumWidth(100)
+            self.combo_graph1[-1].setStatusTip('Выберите загруженный файл')
+            self.combo_graph1[-1].addItem('')
+            self.combo_graph1[-1].activated.connect(self.update_set_graph)
+            self.combo_graph2.append(QComboBox(self))
+            self.combo_graph2[-1].setMinimumWidth(100)
+            self.combo_graph2[-1].setStatusTip('Выберите загруженный файл')
+            self.combo_graph2[-1].addItem('')
+            self.combo_graph2[-1].activated.connect(self.update_set_graph)
+            list_ = [x for x in range(3)]
+            del list_[i]
+            self.lbl_link1.append(QLabel('Связать ось X c вкладкой №' + str(list_[0] + 1)))
+            self.lbl_link2.append(QLabel('Связать ось X c вкладкой №' + str(list_[1] + 1)))
+            self.check_link1.append(QCheckBox())
+            self.check_link1[-1].setChecked(False)
+            self.check_link1[-1].stateChanged.connect(self.update_set_graph)
+            self.check_link2.append(QCheckBox())
+            self.check_link2[-1].setChecked(False)
+            self.check_link2[-1].stateChanged.connect(self.update_set_graph)
 
         # График
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
-        self.grafik = pg.PlotWidget(name='Plot1')
-        self.grafik.setLabel('left', '<font size="5">Амплитуда</font>')
-        # self.grafik.setLabel('bottom', '<font size="5">Время, (c)</font>', units='с')
-        self.grafik.setLabel('bottom', '<font size="5">Время, (c)</font>')
-        # self.grafik.setXRange(0, 2)
-        # self.grafik.setYRange(0, 1e-10)
-
-        # Таблица с результатами работы (с циклограммой)
-        self.table_cycl = QTableWidget()
-        self.table_cycl.setRowCount(0)
-        self.table_cycl.setColumnCount(3)
-        self.table_cycl.setHorizontalHeaderLabels(["№", "Время", "Характеристика"])
-        self.table_cycl.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.table_cycl.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Запрет редактирования таблицы
-        self.table_cycl.setMaximumWidth(600)
-        # self.table_cycl.setWordWrap(True)
-        # self.table_cycl.setColumnWidth(номер столбца, ширина)
-        # table.setVerticalHeaderLabels(["", ""])
+        self.grafik = DockArea()
 
         # Управление макетом
         self.cur_layout = self.layout_init()
         self.setLayout(self.cur_layout)
 
-    def com_line_init(self, path, num_order, sign, freq):
-        # Донастройка параметров командной строки
-        if path is None or num_order is None or sign is None or freq is None:
-            return
-        self.fnames[0] = path
-        self.num_orders[0] = num_order
-        self.signs[0] = sign
-        self.freqs[0] = freq
-        # запуск задачи
-        self.start_SBitChange_thread()
-
-    def lbl_descr_init(self):
-        descr = '<div align="center">Программа расчета циклограммы полета БР по каналу режимов.</div>'
-        self.lbl_descr = QLabel(descr)
-        self.lbl_descr.setMaximumWidth(500)
-        self.lbl_descr.setWordWrap(True)
-        self.lbl_descr.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        return self.lbl_descr
-
-    def btn_path_init(self):
-        self.btn_path = QPushButton('Выбрать...')
-        self.btn_path.resize(self.btn_path.sizeHint())
-        self.btn_path.clicked.connect(self.show_dlg_path)
-        self.btn_path.setStatusTip('Выбор файла ...')
-        return self.btn_path
-
-    def spin_numord_init(self):
-        self.spin_numord = QSpinBox(self)
-        self.spin_numord.setMinimumWidth(40)
-        self.spin_numord.setMaximumWidth(60)
-        self.spin_numord.setValue(16)
-        self.spin_numord.setMaximum(64)
-        self.spin_numord.setMinimum(8)
-        self.spin_numord.setSingleStep(8)
-        self.spin_numord.valueChanged.connect(self.spin_numord_chng)
-        self.spin_numord.editingFinished.connect(self.get_numord)
-        self.spin_numord.setStatusTip('Введите количество разрядов телеметрических каналов')
-        return self.spin_numord
-
-    def spin_numord_chng(self):
-        if self.spin_numord.value() < 8:
-            self.spin_numord.setValue(8)
-        elif self.spin_numord.value() > 64:
-            self.spin_numord.setValue(64)
-
     def show_dlg_path(self):
+        index = self.btn_open_files.index(self.sender())
         dir_path = '..'
         dlg_files = QFileDialog()
         dlg_files.setFileMode(QFileDialog.AnyFile)
-        dlg_files.setLabelText(QFileDialog.LookIn, 'Открыть файл канала режимов ...')
+        dlg_files.setLabelText(QFileDialog.LookIn, 'Выберите файл ТМП ...')
         dlg_files.setAcceptMode(QFileDialog.AcceptOpen)
         dlg_files.setDirectory(dir_path)
         if dlg_files.exec_():
-            self.table_cycl.clear()
-            self.table_cycl.setRowCount(0)
-            self.table_cycl.setColumnCount(3)
-            self.table_cycl.setHorizontalHeaderLabels(["№", "Время", "Характеристика"])
-            self.fname = dlg_files.selectedFiles()[0]
-            self.lbl_path.setText(self.fname)
-            if self.thread is not None:
-                self.thread.disconnect()
-                self.thread = None
-            self.num_order = self.get_numord()
-            self.setStatusTip('Идет обработка...')
-            self.thread = GraphTMPThread(self.fname, self.num_order, self.grafik)
-            self.thread.s_error[str].connect(self.showDlgErr)
-            self.thread.finished.connect(self.finished_cyclogr_mode_thread)
-            self.thread.s_mode.connect(self.update_table)
-            self.thread.start()
+            dir_, self.fnames[index] = os.path.split(dlg_files.selectedFiles()[0])
+            self.lbl_path[index].setText(self.fnames[index])
+            self.fpath[index] = dlg_files.selectedFiles()[0]
+            self.update_set_graph()
 
-    def update_table(self, i):
-        if i[0] == 0:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1]/100)))
-            descr = 'Участок старта и неуправляемого полета'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 1:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Управляемый полет первой ступени и разделение ступеней'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 2:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Управляемый полет второй ступени и разделение ступеней, отделение головного обтекателя'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 3:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Управляемый полет третьей ступени'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 4:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Участок дожигания топлива'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 5:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Совместный полет третьей ступени и АБР, отход АБР'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 6:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Разворот АБР'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 7:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Астрокоррекция параметров СУ'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 8:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Разворот АБР в точку прицеливания'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 9:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Отработка командного вектора, в заданном направлении'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 10:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Разворот и успокоение АБР для сброса БГ'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 11:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Стабилизация и сброс БГ, отход АБР от БГ с разворотом'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        elif i[0] == 12 or i[0] == 13 or i[0] == 14:
-            self.table_cycl.insertRow(self.table_cycl.rowCount())
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 0, QTableWidgetItem(str(i[0])))
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 1, QTableWidgetItem(str(i[1] / 100)))
-            descr = 'Движение в направлении, заданном предыдущим разворотом (в течении режима 11)'
-            self.table_cycl.setItem(self.table_cycl.rowCount() - 1, 2, QTableWidgetItem(descr))
-        return
+    def update_set_graph(self):
+        # Комбо на вкладках
+        for i1 in range(3):
+            temp = self.combo_graph1[i1].currentText()
+            while self.combo_graph1[i1].count() > 0:
+                self.combo_graph1[i1].removeItem(0)
+            cur_index = 0
+            fix_index = 0
+            self.combo_graph1[i1].addItem('')
+            for fname in self.fnames:
+                if fname is None:
+                    continue
+                if self.combo_graph2[i1].currentText() != fname:
+                    self.combo_graph1[i1].addItem(fname)
+                    cur_index += 1
+                if temp == fname:
+                    fix_index = cur_index
+            self.combo_graph1[i1].setCurrentIndex(fix_index)
 
-    def showDlgErr(self, err):
-        dlg_err = QMessageBox()
-        dlg_err.setIcon(QMessageBox.Warning)
-        dlg_err.setWindowTitle('Ошибка')
-        dlg_err.setText(err)
-        dlg_err.setStandardButtons(QMessageBox.Ok)
-        dlg_err.exec_()
+        for i2 in range(3):
+            temp = self.combo_graph2[i2].currentText()
+            while self.combo_graph2[i2].count() > 0:
+                self.combo_graph2[i2].removeItem(0)
+            cur_index = 0
+            fix_index = 0
+            self.combo_graph2[i2].addItem('')
+            for fname in self.fnames:
+                if fname is None:
+                    continue
+                if self.combo_graph1[i2].currentText() != fname:
+                    self.combo_graph2[i2].addItem(fname)
+                    cur_index += 1
+                if temp == fname:
+                    fix_index = cur_index
+            self.combo_graph2[i2].setCurrentIndex(fix_index)
 
-    def finished_cyclogr_mode_thread(self):
-        if self.thread is not None:
-            self.thread.disconnect()
-            self.thread = None
-        self.setStatusTip('')
-
-    def get_numord(self):
-        condition = self.spin_numord.value() != 8 and self.spin_numord.value() != 16 and self.spin_numord.value() != 32
-        condition = condition and self.spin_numord.value() != 64
-        if condition:
-            if self.spin_numord.value() <= 8:
-                self.spin_numord.setValue(8)
-            elif self.spin_numord.value() <= 16:
-                if self.spin_numord.value() < 12:
-                    self.spin_numord.setValue(8)
-                else:
-                    self.spin_numord.setValue(12)
-            elif self.spin_numord.value() < 32:
-                if self.spin_numord.value() < 24:
-                    self.spin_numord.setValue(16)
-                else:
-                    self.spin_numord.setValue(32)
+        # Частоты дискретизации и типы данных
+        for i in range(6):
+            self.data_types[i] = self.combo_d_types[i].currentText()
+            self.freqs[i] = self.spin_freq[i].value()
+        # Формирование предустановок
+        fpath = [None, None, None, None, None, None]
+        data_types = [None, None, None, None, None, None]
+        freqs = [None, None, None, None, None, None]
+        links = [False, False, False, False, False, False]
+        for i in range(3):
+            if self.combo_graph1[i].currentText() != '':
+                fpath[i * 2] = self.fpath[self.fnames.index(self.combo_graph1[i].currentText())]
+            if self.combo_graph2[i].currentText() != '':
+                fpath[i * 2 + 1] = self.fpath[self.fnames.index(self.combo_graph2[i].currentText())]
+            if self.check_link1[i].isChecked():
+                links[i * 2] = True
             else:
-                if self.spin_numord.value() < 48:
-                    self.spin_numord.setValue(32)
-                else:
-                    self.spin_numord.setValue(64)
-        return self.spin_numord.value()
+                links[i * 2] = False
+            if self.check_link2[i].isChecked():
+                links[i * 2 + 1] = True
+            else:
+                links[i * 2 + 1] = False
+        for i in range(6):
+            if fpath[i] is not None:
+                data_types[i] = self.data_types[i]
+                freqs[i] = self.freqs[i]
+        self.thread.update_data(fpath, data_types, freqs, links)
 
     def layout_init(self):
-        # Предназначение
-        descr_layout = QHBoxLayout()
-        descr_layout.addWidget(self.lbl_descr)
-        # Выбор файла
-        path_layout = QHBoxLayout()
-        path_layout.addWidget(self.btn_path)
-        path_layout.addStretch(1)
-        path_v_layout = QVBoxLayout()
-        path_v_layout.addLayout(path_layout)
-        path_v_layout.addWidget(self.lbl_path)
-        self.gbox_path.setLayout(path_v_layout)
-        # Параметры
-        param_layout = QVBoxLayout()
-        param_layout.addWidget(self.lbl_numord)
-        param_layout.addWidget(self.spin_numord)
-        # Левый layout
         vbox_left = QVBoxLayout()
-        vbox_left.addLayout(descr_layout)
-        self.gbox_path.setMaximumWidth(500)
-        vbox_left.addWidget(self.gbox_path)
-        vbox_left.addLayout(param_layout)
-        vbox_left.addWidget(self.table_cycl)
-        #vbox_left.addStretch(1)
+        # Настройка файлов
+        for i in range(6):
+            lay_vbox_open_file = QVBoxLayout()
+            lay_vbox_open_file.addWidget(self.btn_open_files[i])
+            lay_vbox_open_file.addWidget(self.lbl_path[i])
+
+            lay_vbox_data_type = QVBoxLayout()
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.lbl_d_types[i])
+            hbox.addStretch(1)
+            lay_vbox_data_type.addLayout(hbox)
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.combo_d_types[i])
+            hbox.addStretch(1)
+            lay_vbox_data_type.addLayout(hbox)
+
+            lay_vbox_freq = QVBoxLayout()
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.lbl_freq[i])
+            hbox.addStretch(1)
+            lay_vbox_freq.addLayout(hbox)
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.spin_freq[i])
+            hbox.addStretch(1)
+            lay_vbox_freq.addLayout(hbox)
+
+            lay_hbox_file = QHBoxLayout()
+            lay_hbox_file.addLayout(lay_vbox_open_file)
+            lay_hbox_file.addLayout(lay_vbox_data_type)
+            lay_hbox_file.addLayout(lay_vbox_freq)
+            self.gbox_files[i].setLayout(lay_hbox_file)
+            self.gbox_files[i].setMaximumWidth(450)
+
+            vbox_left.addWidget(self.gbox_files[i])
+
+        # Настройка графиков
+        lay_vbox_setting = QVBoxLayout()
+        for i in range(3):
+            lay_vbox_select_graph1 = QVBoxLayout()
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.lbl_graph1[i])
+            hbox.addStretch(1)
+            lay_vbox_select_graph1.addLayout(hbox)
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.combo_graph1[i])
+            hbox.addStretch(1)
+            lay_vbox_select_graph1.addLayout(hbox)
+
+            lay_vbox_select_graph2 = QVBoxLayout()
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.lbl_graph2[i])
+            hbox.addStretch(1)
+            lay_vbox_select_graph2.addLayout(hbox)
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(self.combo_graph2[i])
+            hbox.addStretch(1)
+            lay_vbox_select_graph2.addLayout(hbox)
+
+            lay_hbox_link1 = QHBoxLayout()
+            lay_hbox_link1.addWidget(self.lbl_link1[i])
+            lay_hbox_link1.addWidget(self.check_link1[i])
+            lay_hbox_link2 = QHBoxLayout()
+            lay_hbox_link2.addWidget(self.lbl_link2[i])
+            lay_hbox_link2.addWidget(self.check_link2[i])
+            lay_vbox_link = QVBoxLayout()
+            lay_vbox_link.addLayout(lay_hbox_link1)
+            lay_vbox_link.addLayout(lay_hbox_link2)
+
+            lay_hbox_vkladka = QHBoxLayout()
+            lay_hbox_vkladka.addLayout(lay_vbox_select_graph1)
+            lay_hbox_vkladka.addLayout(lay_vbox_select_graph2)
+            lay_hbox_vkladka.addLayout(lay_vbox_link)
+
+            self.gbox_graph[i].setLayout(lay_hbox_vkladka)
+
+            lay_vbox_setting.addWidget(self.gbox_graph[i])
+
+        self.gbox_setting.setLayout(lay_vbox_setting)
+        self.gbox_setting.setMaximumWidth(450)
+
+        vbox_left.addWidget(self.gbox_setting)
+        vbox_left.addStretch(1)
+
         # График
         hbox_stretch = QHBoxLayout()
-        hbox_stretch.addStretch(1)
         hbox_stretch.addStretch(1)
         vbox_right = QVBoxLayout()
         vbox_right.addWidget(self.grafik)
@@ -322,4 +296,27 @@ class GraphTMPMainWidg(QWidget):
         hbox_common.addLayout(vbox_left)
         hbox_common.addLayout(vbox_right)
         return hbox_common
+
+
+def show_dlg_err(err):
+    dlg_err = QMessageBox()
+    dlg_err.setIcon(QMessageBox.Warning)
+    dlg_err.setWindowTitle('Ошибка')
+    dlg_err.setText(err + '\nВыберите новый файл.')
+    dlg_err.setStandardButtons(QMessageBox.Ok)
+    dlg_err.exec_()
+
+
+
+"""
+    def com_line_init(self, path, num_order, sign, freq):
+        # Донастройка параметров командной строки
+        if path is None or num_order is None or sign is None or freq is None:
+            return
+        self.fpath[0] = path
+        self.num_orders[0] = num_order
+        self.signs[0] = sign
+        self.freqs[0] = freq
+        # запуск задачи
+        self.start_SBitChange_thread()
 """
