@@ -14,8 +14,8 @@ class AISdb:
         self.num_mes = 0
 
     def add_msg(self, msg_):
-        valcols = ":obj_pk, :channel, :msg_id, :mmsi, :routes_pk, :ship_lat, :ship_long, :time, :offset, :lat, " \
-                  ":long, :alt, :speed, :rssi, :mes_str"
+        valcols = ":obj_pk, :ship_name, :dest, :channel, :msg_id, :mmsi, :routes_pk, :ship_lat, :ship_long, :time, " \
+                  ":offset, :lat, :long, :alt, :speed, :rssi, :mes_str"
         values = msg_
         try:
             self.conn.execute(

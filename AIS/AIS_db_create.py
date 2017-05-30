@@ -21,6 +21,8 @@ def create_tables(out_db_name):
     conn_bd.execute('''CREATE TABLE messages (
     mes_pk    INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
     obj_pk    INTEGER,
+    ship_name VARCHAR(64),
+    dest      VARCHAR(64),
     channel   VARCHAR (1),
     msg_id    INTEGER,
     mmsi      BIGINT,

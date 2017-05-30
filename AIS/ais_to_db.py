@@ -19,13 +19,13 @@ class AISdb:
         self.num_mes = 0
 
     def add_msg(self, msg_):
-        valcols = ":obj_pk, :channel, :msg_id, :mmsi, :routes_pk, :ship_lat, :ship_long, :time, :offset, :lat, " \
-                  ":long, :alt, :speed, :rssi, :mes_str"
+        valcols = ":obj_pk, :ship_name, :dest, :channel, :msg_id, :mmsi, :routes_pk, :ship_lat, :ship_long, :time, " \
+                  ":offset, :lat, :long, :alt, :speed, :rssi, :mes_str"
         values = msg_
         try:
             self.conn.execute(
-                "INSERT INTO messages(obj_pk, channel, msg_id, mmsi, routes_pk, ship_lat, ship_long, time, offset, lat,"
-                " long, alt, speed, rssi, mes_str) VALUES (" + valcols + ");", values)
+                "INSERT INTO messages(obj_pk, ship_name, :dest, channel, msg_id, mmsi, routes_pk, ship_lat, "
+                "ship_long, time, offset, lat, long, alt, speed, rssi, mes_str) VALUES (" + valcols + ");", values)
         except sqlite3 as err:
             print(err)
         if self.num_mes > 16:
@@ -86,6 +86,8 @@ if __name__ == '__main__':
                       'dest': '',
                       'callsign': ''}
     clear_dict_msg = {'obj_pk': 0,
+                      'ship_name': '',
+                      'dest': '',
                       'channel': '',
                       'msg_id': 0,
                       'mmsi': 0,
@@ -148,9 +150,39 @@ if __name__ == '__main__':
                     dict_msg['ship_lat'] = lat_dd
                     dict_msg['ship_long'] = long_ddd
                 elif ais_state.msgid == 5:
+                    # callsign
+                    # ship_type
                     msg = aisparser.aismsg_5()
                     aisparser.parse_ais_5(ais_state, msg)
                     dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_name'] = msg.name
+                    dict_msg['dest'] = msg.dest
+                elif ais_state.msgid == 18:
+                    msg = aisparser.aismsg_18()
+                    aisparser.parse_ais_18(ais_state, msg)
+                    (status, lat_dd, long_ddd) = aisparser.pos2ddd(msg.latitude, msg.longitude)
+                    dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_lat'] = lat_dd
+                    dict_msg['ship_long'] = long_ddd
+                elif ais_state.msgid == 19:
+                    msg = aisparser.aismsg_19()
+                    aisparser.parse_ais_19(ais_state, msg)
+                    (status, lat_dd, long_ddd) = aisparser.pos2ddd(msg.latitude, msg.longitude)
+                    dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_lat'] = lat_dd
+                    dict_msg['ship_long'] = long_ddd
+                    dict_msg['ship_name'] = msg.name
+                elif ais_state.msgid == 20:
+                    msg = aisparser.aismsg_20()
+                    aisparser.parse_ais_20(ais_state, msg)
+                    dict_msg['mmsi'] = msg.userid
+                elif ais_state.msgid == 21:
+                    msg = aisparser.aismsg_21()
+                    aisparser.parse_ais_21(ais_state, msg)
+                    (status, lat_dd, long_ddd) = aisparser.pos2ddd(msg.latitude, msg.longitude)
+                    dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_lat'] = lat_dd
+                    dict_msg['ship_long'] = long_ddd
                 else:
                     print('Unknown line. msg_id = ' + str(ais_state.msgid))
                 dict_msg['mes_str'] = line[0]
