@@ -19,6 +19,9 @@ if __name__ == '__main__':
     namespace = parser.parse_args(sys.argv[1:])
     if namespace.recursive is None:
         namespace.recursive = True
+    namespace.recursive = True
+    print('recursive mode:')
+    print(namespace.recursive)
     inpath = namespace.inpath[0]
     if len(namespace.inpath) > 1:
         for i in range(1, len(namespace.inpath)):
@@ -32,24 +35,30 @@ if __name__ == '__main__':
     namespace.demodpath = demodpath
     del demodpath
     if namespace.recursive:
-        filesList = glob.glob(namespace.inpath + '**//*.iq', recursive=True)
+        print(os.path.exists(namespace.inpath))
+        filesList = glob.glob(namespace.inpath + '**/*.iq', recursive=True)
+        print(namespace.inpath + '**/*.iq')
+        print(filesList)
     else:
         filesList = glob.glob(namespace.inpath + '*.iq', recursive=False)
     if len(filesList) < 1:
         raise BaseException('In the catalog a little of files.')
     filesList.sort()
     numfile = 0
-    fid_out = open(namespace.inpath + 'rezult.txt', 'w')
+    fid_out = open(namespace.inpath + 'demod_message.txt', 'w')
     for fileName in filesList:
         numfile += 1
         try:
-            child_proc = Popen([namespace.demodpath, '-v', '-m', '8', '-o', '0.48', '-d', '0.02', '-F', '2400000',
+            child_proc = Popen([namespace.demodpath, '-v', '-x', '-m', '8', '-o', '0.48', '-d', '0.02', '-F', '2400000',
                                 '-f', fileName, '162050', '161975', '162025'], stdin=PIPE, stdout=PIPE, stderr=PIPE,
                                shell=False)
             [out_bytes, err_bytes] = child_proc.communicate(timeout=3600)
         except SubprocessError as err:
             print(err)
         out_txt = out_bytes.decode('cp1251')
+        err_txt = err_bytes.decode('cp1251')
+        print('\n\nerr_txt:')
+        print(err_txt)
         text = '\r\nFile number: ' + str(numfile) + '/' + str(len(filesList)) + '\r\n'
         fid_out.write(text)
         print(text)

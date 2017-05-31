@@ -24,9 +24,9 @@ class AISdb:
         values = msg_
         try:
             self.conn.execute(
-                "INSERT INTO messages(obj_pk, ship_name, :dest, channel, msg_id, mmsi, routes_pk, ship_lat, "
+                "INSERT INTO messages(obj_pk, ship_name, dest, channel, msg_id, mmsi, routes_pk, ship_lat, "
                 "ship_long, time, offset, lat, long, alt, speed, rssi, mes_str) VALUES (" + valcols + ");", values)
-        except sqlite3 as err:
+        except BaseException as err:
             print(err)
         if self.num_mes > 16:
             self.conn.commit()
@@ -69,6 +69,9 @@ if __name__ == '__main__':
         for i in range(1, len(namespace.inpath)):
             inpath += ' ' + namespace.inpath[i]
     namespace.inpath = inpath
+    print(os.path.exists(namespace.inpath))
+    print('\n\ninpath:')
+    print(namespace.inpath.split('.'))
     del inpath
     if os.path.exists(namespace.inpath) and os.path.isfile(namespace.inpath):
         filesList = [namespace.inpath]
@@ -128,6 +131,11 @@ if __name__ == '__main__':
                     dict_msg['mmsi'] = msg.userid
                     dict_msg['ship_lat'] = lat_dd
                     dict_msg['ship_long'] = long_ddd
+                    # Rate of Turn
+                    # Speed Over Ground
+                    # Course over Ground
+                    # True heading
+
                 elif ais_state.msgid == 2:
                     msg = aisparser.aismsg_2()
                     aisparser.parse_ais_2(ais_state, msg)
@@ -157,6 +165,21 @@ if __name__ == '__main__':
                     dict_msg['mmsi'] = msg.userid
                     dict_msg['ship_name'] = msg.name
                     dict_msg['dest'] = msg.dest
+                elif ais_state.msgid == 8:
+                    msg = aisparser.aismsg_8()
+                    aisparser.parse_ais_8(ais_state, msg)
+                    dict_msg['mmsi'] = msg.userid
+                elif ais_state.msgid == 15:
+                    msg = aisparser.aismsg_15()
+                    aisparser.parse_ais_15(ais_state, msg)
+                    dict_msg['mmsi'] = msg.userid
+                elif ais_state.msgid == 17:
+                    msg = aisparser.aismsg_17()
+                    aisparser.parse_ais_17(ais_state, msg)
+                    (status, lat_dd, long_ddd) = aisparser.pos2ddd(msg.latitude*1000, msg.longitude*1000)
+                    dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_lat'] = lat_dd
+                    dict_msg['ship_long'] = long_ddd
                 elif ais_state.msgid == 18:
                     msg = aisparser.aismsg_18()
                     aisparser.parse_ais_18(ais_state, msg)
@@ -183,6 +206,13 @@ if __name__ == '__main__':
                     dict_msg['mmsi'] = msg.userid
                     dict_msg['ship_lat'] = lat_dd
                     dict_msg['ship_long'] = long_ddd
+                elif ais_state.msgid == 24:
+                    # callsign
+                    # ship_type
+                    msg = aisparser.aismsg_24()
+                    aisparser.parse_ais_24(ais_state, msg)
+                    dict_msg['mmsi'] = msg.userid
+                    dict_msg['ship_name'] = msg.name
                 else:
                     print('Unknown line. msg_id = ' + str(ais_state.msgid))
                 dict_msg['mes_str'] = line[0]
