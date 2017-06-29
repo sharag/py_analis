@@ -70,8 +70,8 @@ int HandleOptions(int argc, char *argv[])
 				i++;
 				break;
 			default:
-				fprintf(stderr, "Error. Unknown option %s\n", argv[i]);
-				fprintf(stdout, "Error. Unknown option %s\n", argv[i]);
+				fprintf(stderr, "LOG | WARNING | SrchStates | Unknown option %s\n", argv[i]);
+				fprintf(stdout, "LOG | WARNING | SrchStates | Unknown option %s\n", argv[i]);
 				Usage(argv[0]);
 				break;
 			}
@@ -273,35 +273,35 @@ int verification(char *argv[])
 {
 	if (strnlen_s(inFILEpath, FILENAME_MAX) < 3)
 	{
-		fprintf(stdout, "Error. Invalid input directory path.\n");
-		fprintf(stderr, "Error. Invalid input directory path.\n");
+		fprintf(stdout, "LOG | WARNING | SrchStates | Invalid input directory path.\n");
+		fprintf(stderr, "LOG | WARNING | SrchStates | Invalid input directory path.\n");
 	}
 	else if (timeIntrvl > (float)300 || timeIntrvl < (float)0.1)
 	{
-		fprintf(stdout, "Error. Invalid time interval: float[0.1 - 300.0].\n");
-		fprintf(stderr, "Error. Invalid time interval: float[0.1 - 300.0].\n");
+		fprintf(stdout, "LOG | WARNING | SrchStates | Invalid time interval: float[0.1 - 300.0].\n");
+		fprintf(stderr, "LOG | WARNING | SrchStates | Invalid time interval: float[0.1 - 300.0].\n");
 	}
 	else if (minNumMode < 1 || minNumMode > 50)
 	{
-		fprintf(stdout, "Error. Invalid minimum number of modes: uint[1 - 50].\n");
-		fprintf(stderr, "Error. Invalid minimum number of modes: uint[1 - 50].\n");
+		fprintf(stdout, "LOG | WARNING | SrchStates | Invalid minimum number of modes: uint[1 - 50].\n");
+		fprintf(stderr, "LOG | WARNING | SrchStates | Invalid minimum number of modes: uint[1 - 50].\n");
 	}
 	else if (maxNumMode < 1 || maxNumMode > 50)
 	{
-		fprintf(stdout, "Error. Invalid maximum number of modes: uint[1 - 50].\n");
-		fprintf(stderr, "Error. Invalid maximum number of modes: uint[1 - 50].\n");
+		fprintf(stdout, "LOG | WARNING | SrchStates | Invalid maximum number of modes: uint[1 - 50].\n");
+		fprintf(stderr, "LOG | WARNING | SrchStates | Invalid maximum number of modes: uint[1 - 50].\n");
 	}
 	else if (minNumMode >= maxNumMode)
 	{
-		fprintf(stdout, "Error. Minimum number of modes should be less than maximum number of modes.\n");
-		fprintf(stderr, "Error. minimum number of modes should be less than maximum number of modes.\n");
+		fprintf(stdout, "LOG | WARNING | SrchStates | Minimum number of modes should be less than maximum number of modes.\n");
+		fprintf(stderr, "LOG | WARNING | SrchStates | Minimum number of modes should be less than maximum number of modes.\n");
 	}
 	else
 	{
 		if (numorder != 8 && numorder != 16 && numorder != 32 && numorder != 64)
 		{
-			fprintf(stdout, "Error. Invalid number of order: uint[8, 16, 32, 64].\n");
-			fprintf(stderr, "Error. Invalid number of order: uint[8, 16, 32, 64].\n");
+			fprintf(stdout, "LOG | WARNING | SrchStates | Invalid number of order: uint[8, 16, 32, 64].\n");
+			fprintf(stderr, "LOG | WARNING | SrchStates | Invalid number of order: uint[8, 16, 32, 64].\n");
 			Usage(argv[0]);
 			return (-1);
 		}
@@ -318,8 +318,8 @@ int main(int argc, char *argv[])
 	numorder = 16;//Количество разрядов канала
 	minNumMode = 3;//Минимальное количество идентифицированных режимов
 	maxNumMode = 17;//Максимальное количество идентифицированных режимов
-	numword = 0;//Количество 
-	fsize = 0;//размер файла
+	numword = 0;//Количество отсчетов
+	fsize = 0;//Размер файла
 	memset(inFILEpath, 0, FILENAME_MAX * sizeof(wchar_t));
 
 	/* handle the program options */
@@ -327,10 +327,12 @@ int main(int argc, char *argv[])
 
 	if (verification(argv))
 		return (-1);
+	
 	if (srch_states(inFILEpath))
 		fprintf(stdout, "LOG | INFO | SrchStates | TEST_STATUS | TRUE | FNAME | %s\n", inFILEpath);
 	else
 		fprintf(stdout, "LOG | INFO | SrchStates | TEST_STATUS | FALSE\n");
+	system("pause");
 	return 0;
 }
 
