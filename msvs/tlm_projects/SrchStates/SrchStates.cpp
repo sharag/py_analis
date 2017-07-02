@@ -11,7 +11,7 @@ typedef unsigned short ushort;
 char inFILEpath[FILENAME_MAX * sizeof(char)];//путь к каталогу в ASKI
 											 /*параметры решателя*/
 float fdiskr;//Частота дискретизации канала в Гц
-float timeIntrvl;//Оцениваемый интервал времени работы в одном режиме
+float timeIntrvl; //Оцениваемый интервал времени работы в одном режиме
 uint numorder;//Количество разрядов канала
 uint minNumMode;//Минимальное количество идентифицированных режимов
 uint maxNumMode;//Максимальное количество идентифицированных режимов
@@ -332,7 +332,6 @@ int main(int argc, char *argv[])
 		fprintf(stdout, "LOG | INFO | SrchStates | TEST_STATUS | TRUE | FNAME | %s\n", inFILEpath);
 	else
 		fprintf(stdout, "LOG | INFO | SrchStates | TEST_STATUS | FALSE\n");
-	system("pause");
 	return 0;
 }
 
