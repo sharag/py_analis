@@ -331,6 +331,6 @@ def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach,
     return num_po, num_lt, num_pc
 
 if __name__ == '__main__':
-    """Функция служит для тестирования модуля"""
+    """Кусок служит для тестирования модуля"""
     cl = FormSurge()
     surge_ = cl.get_surge()
