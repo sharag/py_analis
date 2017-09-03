@@ -188,15 +188,14 @@ def optimum_win_param(signal, step_win):
             len_win_aft = len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind]
             max_prob[len_win_ind][len_win_bef_ind] = \
                 max(f_probability(signal, len_win_bef[len_win_bef_ind], len_win_aft))
-
-            max_ind = list()
-            max_ind.append(np.argmax(max_prob) // max_prob.shape[1])
-            max_ind.append(np.argmax(max_prob) % max_prob.shape[1])
-            win = len_win_x[max_ind[0]]
-            win_bef = len_win_bef[max_ind[1]]
-            win_aft = win - win_bef
-
-    return len_win_x, len_win_bef, max_prob
+    max_ind = list()
+    max_ind.append(np.argmax(max_prob) // max_prob.shape[1])
+    max_ind.append(np.argmax(max_prob) % max_prob.shape[1])
+    win = len_win_cur[max_ind[0]]
+    win_bef = len_win_bef[max_ind[1]]
+    win_aft = win - win_bef
+    max_prob_val = np.max(max_prob)
+    return win, win_bef, win_aft, max_prob_val
 
 
 def add_nois(sig_, p):

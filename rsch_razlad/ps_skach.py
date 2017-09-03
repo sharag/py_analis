@@ -26,15 +26,8 @@ plt.plot(signal, linewidth=3)
 plt.grid(True)
 plt.show()
 # Определим оптимальные параметры окна и порог
-len_win, len_win_bef, probabl_x2_ps_obr = optimum_win_param(surge_ps, step_win)
-max_ind = list()
-max_ind.append(np.argmax(probabl_x2_ps_obr)//probabl_x2_ps_obr.shape[1])
-max_ind.append(np.argmax(probabl_x2_ps_obr) % probabl_x2_ps_obr.shape[1])
-
-win = len_win[max_ind[0]]
-win_bef = len_win_bef[max_ind[1]]
-win_aft = win - win_bef
-porog = 0.9*np.max(probabl_x2_ps_obr)
+win, win_bef, win_aft, max_prob_val = optimum_win_param(surge_ps, step_win)
+porog = 0.9 * max_prob_val
 # График функции отношения правдоподобия с оптимальным окном
 prob = f_probability(surge_ps, win_bef, win_aft)
 plt.figure(41)
