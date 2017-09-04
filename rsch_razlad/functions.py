@@ -3,6 +3,14 @@
 """
 import numpy as np
 import copy
+import sys
+
+
+def get_post_sost(graph_len):
+    surge_ps = [0] * (graph_len // 2)
+    surge_ps_indexes = [i for i in range(len(surge_ps), graph_len)]
+    surge_ps.extend([1] * (graph_len // 2))
+    return surge_ps, surge_ps_indexes
 
 
 class FormSurge:
@@ -12,6 +20,8 @@ class FormSurge:
         """ Инициализация класса """
         self.cur_surge = 0
         self.num_surge = 7
+
+
 
     def get_surge(self, n_surge, win_len):
         """Функция, возвращающая при каждом вызове очередной скачок
@@ -175,19 +185,29 @@ def optimum_win_param(signal, step_win):
     """Функция определения оптимальных размеров окона, участка до скачка и участка после скачка
     signal - входной временной ряд
     step_win - шаг изменения размера окна (четное)"""
+    print("\nПоиск оптимальных параметров окна по максимуму функции отношения правдоподобия.")
     max_len_win = len(signal)  # Максимальный размер окна не превышает половины длины временного ряда
     len_win_cur = np.arange(step_win, max_len_win, step_win)  # Текущий размер окна
     len_win_bef = np.arange(int(step_win/2), max_len_win - int(step_win/2), int(step_win/2))  #
     max_prob = np.zeros([len(len_win_cur), len(len_win_bef)])
+    numtest_win = len(len_win_cur)
+    numtest_win_bef = len(len_win_bef)
+    numtest = numtest_win * numtest_win_bef
+    i = 0
+    print()
     for len_win_ind in range(len(len_win_cur)):
         for len_win_bef_ind in range(len(len_win_bef)):
             if len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind] < 2:
+                i += 1
                 continue
             if len_win_bef[len_win_bef_ind] < len_win_cur[len_win_ind] // 2:
+                i += 1
                 continue
             len_win_aft = len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind]
             max_prob[len_win_ind][len_win_bef_ind] = \
                 max(f_probability(signal, len_win_bef[len_win_bef_ind], len_win_aft))
+            i += 1
+            print('\rТест (%d : %d): %d/%d' % (numtest_win, numtest_win_bef, i, numtest), end='')
     max_ind = list()
     max_ind.append(np.argmax(max_prob) // max_prob.shape[1])
     max_ind.append(np.argmax(max_prob) % max_prob.shape[1])
@@ -259,6 +279,7 @@ def test_probability_list(num_test, insignal, win_bef, win_aft, porog, indexes_s
 
 
 def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
+
     if len(indexes_skach):
         num_skach = 1
     else:
