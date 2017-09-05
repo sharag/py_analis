@@ -17,12 +17,12 @@ pg.setConfigOption('foreground', 'k')
 pg.setConfigOptions(antialias=True)
 
 # Характеристики исследования
-graph_len = 600  # длина временного ряда
+null_len = 200  # длина холостого участка
 k_surge = 0.1  # Коэффициент отношения длины временного ряда к длине скачка
-surge_len = int(graph_len*k_surge)  # Длина скачка
-step_win = 2  # Шаг изменения окна минимум 2
+surge_len = int(null_len*k_surge)  # Длина скачка
+step_win = 10  # Шаг изменения окна минимум 2
 num_order = 16  # Количество разрядов отсчетов для учета вероятности ошибки
-num_test = 1000  # Количество экспериментов для каждого значения вероятности ошибки
+num_test = 10  # Количество экспериментов для каждого значения вероятности ошибки
 
 # Массив вероятностей ошибок
 p_osh_array = np.linspace(0.0001, 0.001, 25)
@@ -34,7 +34,7 @@ p_osh_array = p_osh_array*num_order
 def post_sost():
     """Исследование скачка постоянной составляющей"""
     # Скачок постоянной составляющей
-    surge_ps, surge_ps_index = get_post_sost(graph_len)
+    surge_ps, surge_ps_index = get_post_sost(null_len, surge_len, 1)
 
     # Определим оптимальные параметры окна и порог
     win, win_bef, win_aft, max_prob_val = optimum_win_param(surge_ps, step_win)
@@ -51,8 +51,7 @@ def post_sost():
     prob = f_probability(surge_ps, win_bef, win_aft)
 
     # Определение веоятностных характеристик
-    print("\n\nОпределение веоятностных характеристик")
-    print()
+    print("\n\nОпределение вероятностных характеристик")
     num_po = list()
     num_lt = list()
     num_pc = list()

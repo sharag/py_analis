@@ -3,157 +3,38 @@
 """
 import numpy as np
 import copy
-import sys
 
 
-def get_post_sost(graph_len):
-    surge_ps = [0] * (graph_len // 2)
-    surge_ps_indexes = [i for i in range(len(surge_ps), graph_len)]
-    surge_ps.extend([1] * (graph_len // 2))
+def get_post_sost(null_len, surge_len, skvaj):
+    """null_len - определяет длину нулевого участка
+    surge_len - длина скачка
+    skvaj - коэффициент - часть null_len между скачками"""
+    # 0
+    surge_ps = [0] * null_len
+    # 1
+    surge_ps_indexes = [i for i in range(len(surge_ps), len(surge_ps) + surge_len)]
+    surge_ps.extend([1] * surge_len)
+    # 0
+    surge_ps.extend([0] * int(null_len * skvaj))
+    # 1
+    surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
+    surge_ps.extend([1] * surge_len)
+    # 0
+    surge_ps.extend([0] * int(null_len * skvaj))
+    # 1
+    surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
+    surge_ps.extend([1] * surge_len)
+    # 0
+    surge_ps.extend([0] * null_len)
     return surge_ps, surge_ps_indexes
 
 
-class FormSurge:
-    """ Класс для формирования скачков """
-
-    def __init__(self):
-        """ Инициализация класса """
-        self.cur_surge = 0
-        self.num_surge = 7
-
-
-
-    def get_surge(self, n_surge, win_len):
-        """Функция, возвращающая при каждом вызове очередной скачок
-        Принимаемый аргумент: win_len - задаваемая щирина окна
-        Возвращаемые значения:
-            массив - для графика
-            название
-            список моментов начала очередного скачка
-            список характеристик скачков"""
-        if n_surge is not None:
-            self.cur_surge = n_surge
-        if self.cur_surge == 0:
-            """Первый скачок - скачок постоянной составляющей.
-            Без входных аргументов. На выходе список на 1000 элементов."""
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge.extend([1] * (win_len + 100 - (win_len + 100) % 100))
-            self.cur_surge += 1
-            return surge, 'Скачок постоянной составляющей', None, None
-        elif self.cur_surge == 1:
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge_list = []
-            surge_prop = []
-            for i in range(10, win_len + win_len//2, win_len//10):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([1] * i)
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            self.cur_surge += 1
-            return surge, 'Кратковременные скачки постоянной составляющей', surge_list, surge_prop
-        elif self.cur_surge == 2:
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge_list = []
-            surge_prop = []
-            for i in range(10, win_len + win_len // 2, win_len // 10):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([x / i for x in range(i)])
-                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([1 - x / i for x in range(i)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            for i in range(win_len + win_len // 2, win_len * 10, win_len // 2):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([x / i for x in range(i)])
-                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([1 - x / i for x in range(i)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            self.cur_surge += 1
-            return surge, 'Линейные изменения постоянной составляющей', surge_list, surge_prop
-        elif self.cur_surge == 3:
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge_list = []
-            surge_prop = []
-            for i in range(10, win_len + win_len // 2, win_len // 10):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([x / i for x in range(i)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            for i in range(win_len + win_len // 2, win_len * 10, win_len // 2):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([x / i for x in range(i)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            self.cur_surge += 1
-            return surge, 'Линейное изменение постоянной составляющей и сброс', surge_list, surge_prop
-        elif self.cur_surge == 4:
-            max_point = 1000
-            min_point = 5
-            step = 10
-            surge_list = []
-            surge_prop = []
-            surge_list.append(0)
-            surge_prop.append(min_point)
-            surge = [np.sin(x) for x in np.linspace(-np.pi, np.pi, min_point)[0:-1]]
-            for i in range(min_point, 100, 1):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([np.sin(x) for x in np.linspace(-np.pi, np.pi, i)[0:-1]])
-            for i in range(100, max_point, step):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([np.sin(x) for x in np.linspace(-np.pi, np.pi, i)[0:-1]])
-            self.cur_surge += 1
-            return surge, 'Гармонические колебания с изменяемой частотой', surge_list, surge_prop
-        elif self.cur_surge == 5:
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge_list = []
-            surge_prop = []
-            for i in range(10, win_len + win_len // 2, 10):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
-                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
-                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
-                surge.extend([1 - (((x * 2 / i) ** 2) / 2) for x in range(i // 2)])
-                surge.extend([1 - ((1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5) for x in range(i // 2)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            for i in range(win_len + win_len // 2, 2000, win_len // 2):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
-                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
-                surge.extend([1] * (win_len + 100 - (len(surge) + win_len) % 100))
-                surge.extend([1 - (((x * 2 / i) ** 2) / 2) for x in range(i // 2)])
-                surge.extend([1 - ((1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5) for x in range(i // 2)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            self.cur_surge += 1
-            return surge, 'Нелинейное изменение постоянной составляющей 2 порядка', surge_list, surge_prop
-        elif self.cur_surge == 6:
-            surge = [0] * (win_len + 100 - (win_len + 100) % 100)
-            surge_list = []
-            surge_prop = []
-            for i in range(10, win_len + win_len // 2, 10):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
-                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            for i in range(win_len + win_len // 2, 2000, win_len // 2):
-                surge_list.append(len(surge))
-                surge_prop.append(i)
-                surge.extend([((x * 2 / i) ** 2) / 2 for x in range(i // 2)])
-                surge.extend([(1 - ((x - i / 2) / (i // 2)) ** 2) / 2 + 0.5 for x in range(i // 2)])
-                surge.extend([0] * (win_len + 100 - (len(surge) + win_len) % 100))
-            self.cur_surge += 1
-            return surge, 'Нелинейное изменение постоянной составляющей 2 порядка и сброс', surge_list, surge_prop
-        else:
-            return None, None
+def get_post_sost_skvaj(graph_len, surge_len, skvaj):
+    surge_ps = [0] * (graph_len // 2 - surge_len // 2)
+    surge_ps_indexes = [i for i in range(len(surge_ps), len(surge_ps)+surge_len)]
+    surge_ps.extend([1] * surge_len)
+    surge_ps.extend([0] * (graph_len // 2 - surge_len // 2))
+    return surge_ps, surge_ps_indexes
 
 
 def f_probability(data_, before_win_len, after_win_len):
@@ -182,7 +63,7 @@ def f_probability(data_, before_win_len, after_win_len):
 
 
 def optimum_win_param(signal, step_win):
-    """Функция определения оптимальных размеров окона, участка до скачка и участка после скачка
+    """Функция определения оптимальных размеров окна, участка до скачка и участка после скачка
     signal - входной временной ряд
     step_win - шаг изменения размера окна (четное)"""
     print("\nПоиск оптимальных параметров окна по максимуму функции отношения правдоподобия.")
@@ -194,7 +75,6 @@ def optimum_win_param(signal, step_win):
     numtest_win_bef = len(len_win_bef)
     numtest = numtest_win * numtest_win_bef
     i = 0
-    print()
     for len_win_ind in range(len(len_win_cur)):
         for len_win_bef_ind in range(len(len_win_bef)):
             if len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind] < 2:
@@ -227,55 +107,6 @@ def add_nois(sig_, p):
     for i in range(len(n_sample)):
         sig[n_sample[i]] = np.random.random()
     return sig
-
-
-def test_probability_list(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
-    if len(indexes_skach):
-        num_skach = 1
-    else:
-        return
-    for l in range(1, len(indexes_skach)):
-        if indexes_skach[l] - indexes_skach[l-1] > 1:
-            num_skach += 1
-    num_po = list()  # Правильное обнаружение
-    num_lt = list()  # Ложная тревога
-    num_pc = list()  # Пропуск цели
-    for i in range(num_test):  # Испытания
-        signal = add_nois(insignal, p)
-        prob = f_probability(signal, win_bef, win_aft)
-        k = 0
-        num_po.append(0)
-        num_lt.append(0)
-        num_pc.append(0)
-        while True:  # Проверяем превышение порога функцией правдоподобия
-            if k >= len(prob):
-                break
-            if prob[k] < porog:
-                k += 1
-                continue
-            else:  # Подсчитываем индексы значений функциии правдоподобия, превышающих порог
-                indexes_prob = list()
-                while prob[k] > porog:
-                    if k >= len(prob):
-                        break
-                    indexes_prob.append(k + win_bef)
-                    k += 1
-                # Сверяем обнаруженные индексы с индексами скачка
-                obn = False
-                for ind in indexes_prob:
-                    if ind in indexes_skach:
-                        obn = True
-                        break
-                # принимаем решение: обнаружение или ложная тревога
-                if obn:
-                    num_po[-1] += 1
-                else:
-                    num_lt[-1] += 1
-        if num_po[-1] < num_skach:
-            num_pc[-1] = num_skach - num_po[-1]
-        if num_po[-1] > num_skach:
-            num_lt[-1] += num_po[-1] - num_skach
-    return num_po, num_lt, num_pc
 
 
 def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
@@ -330,8 +161,3 @@ def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach,
         num_lt += num_lt_test
         num_pc += num_pc_test
     return num_po, num_lt, num_pc
-
-if __name__ == '__main__':
-    """Кусок служит для тестирования модуля"""
-    cl = FormSurge()
-    surge_ = cl.get_surge()
