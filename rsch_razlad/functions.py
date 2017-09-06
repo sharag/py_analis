@@ -5,36 +5,69 @@ import numpy as np
 import copy
 
 
-def get_post_sost(null_len, surge_len, skvaj):
+def get_post_sost(null_len, surge_len, skvaj, n_surge):
     """null_len - определяет длину нулевого участка
     surge_len - длина скачка
-    skvaj - коэффициент - часть null_len между скачками"""
+    skvaj - коэффициент - часть null_len между скачками
+    n_surge - количество скачков"""
     # 0
     surge_ps = [0] * null_len
-    # 1
-    surge_ps_indexes = [i for i in range(len(surge_ps), len(surge_ps) + surge_len)]
-    surge_ps.extend([1] * surge_len)
-    # 0
-    surge_ps.extend([0] * int(null_len * skvaj))
-    # 1
-    surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
-    surge_ps.extend([1] * surge_len)
-    # 0
-    surge_ps.extend([0] * int(null_len * skvaj))
-    # 1
-    surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
-    surge_ps.extend([1] * surge_len)
-    # 0
-    surge_ps.extend([0] * null_len)
+    surge_ps_indexes = []
+    n = n_surge
+
+    while n:
+        n -= 1
+        # 1
+        surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
+        surge_ps.extend([1] * surge_len)
+        # 0
+        surge_ps.extend([0] * int(null_len * skvaj))
+
     return surge_ps, surge_ps_indexes
 
 
-def get_post_sost_skvaj(graph_len, surge_len, skvaj):
-    surge_ps = [0] * (graph_len // 2 - surge_len // 2)
-    surge_ps_indexes = [i for i in range(len(surge_ps), len(surge_ps)+surge_len)]
-    surge_ps.extend([1] * surge_len)
-    surge_ps.extend([0] * (graph_len // 2 - surge_len // 2))
-    return surge_ps, surge_ps_indexes
+def research_surge(surge_ps, surge_ps_index, step_win, koef_porog_, num_test, p_osh_array, n_surge):
+    """Исследование скачка постоянной составляющей"""
+    # Скачок постоянной составляющей
+    #surge_ps, surge_ps_index = get_post_sost(null_len, surge_len, 1)
+
+    # Определим оптимальные параметры окна и порог
+    win_, win_bef_, win_aft, max_prob_val = optimum_win_param(surge_ps, step_win)
+    porog_ = koef_porog_ * max_prob_val
+
+    print("\n\nОптимальные параметры окна для скачка постоянной составляющей:")
+    print("До скачка: %d отсчетов" % win_bef_)
+    print("После скачка: %d отсчетов" % win_aft)
+    print("Окно: %d отсчетов" % win_)
+    print("Максимум функции отношения правдоподобия: %d" % max_prob_val)
+    print("Порог функции отношения правдоподобия: %d" % int(porog_))
+
+    # График функции отношения правдоподобия с оптимальным окном
+    prob_ = f_probability(surge_ps, win_bef_, win_aft)
+
+    # Определение веоятностных характеристик
+    print("\n\nОпределение вероятностных характеристик")
+    num_po = list()
+    num_lt = list()
+    num_pc = list()
+    i = 0
+    for p_osh in p_osh_array:
+        i += 1
+        print('\rtest:' + str(i) + '/' + str(len(p_osh_array)), end='')
+        num_po_, num_lt_, num_pc_ = test_probability(num_test,
+                                                     surge_ps,
+                                                     win_bef_,
+                                                     win_aft,
+                                                     porog_,
+                                                     surge_ps_index,
+                                                     p_osh)
+        num_po.append(num_po_)
+        num_lt.append(num_lt_)
+        num_pc.append(num_pc_)
+    po_ = np.array(num_po)/num_test/n_surge
+    lt_ = np.array(num_lt)/num_test/n_surge
+    pc_ = np.array(num_pc)/num_test/n_surge
+    return surge_ps, prob_, po_, lt_, pc_, win_, win_bef_, win_aft, porog_
 
 
 def f_probability(data_, before_win_len, after_win_len):
