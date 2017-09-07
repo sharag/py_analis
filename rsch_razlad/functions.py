@@ -2,7 +2,6 @@
 Модуль формирования скачков
 """
 import numpy as np
-import copy
 
 
 def get_post_sost(null_len, surge_len, skvaj, n_surge):
@@ -11,25 +10,94 @@ def get_post_sost(null_len, surge_len, skvaj, n_surge):
     skvaj - коэффициент - часть null_len между скачками
     n_surge - количество скачков"""
     # 0
-    surge_ps = [0] * null_len
-    surge_ps_indexes = []
+    surge = np.array([0] * int(null_len * skvaj))
+    surge_indexes = np.array([])
     n = n_surge
 
     while n:
         n -= 1
         # 1
-        surge_ps_indexes.extend([i for i in range(len(surge_ps), len(surge_ps) + surge_len)])
-        surge_ps.extend([1] * surge_len)
+        surge_indexes = np.append(surge_indexes, [i for i in range(surge.size, surge.size + surge_len)])
+        surge = np.append(surge, [1] * surge_len)
         # 0
-        surge_ps.extend([0] * int(null_len * skvaj))
+        surge = np.append(surge, ([0] * int(null_len * skvaj)))
 
-    return surge_ps, surge_ps_indexes
+    return surge, surge_indexes
+
+
+def get_lin(null_len, surge_len, skvaj, n_surge):
+    """null_len - определяет длину нулевого участка
+    surge_len - длина скачка
+    skvaj - коэффициент - часть null_len между скачками
+    n_surge - количество скачков"""
+    # 0
+    surge = np.array([0] * int(null_len * skvaj))
+    surge_indexes = np.array([])
+    n = n_surge
+
+    while n:
+        n -= 1
+        # 1
+        surge_indexes = np.append(surge_indexes, [i for i in range(surge.size, surge.size + surge_len)])
+        surge = np.append(surge, ([x / (surge_len / 2) for x in range(surge_len // 2)]))
+        surge = np.append(surge, ([(1 - x / (surge_len / 2)) for x in range(surge_len // 2)]))
+        # 0
+        surge = np.append(surge, ([0] * int(null_len * skvaj)))
+
+    return surge, surge_indexes
+
+
+def get_kvadr(null_len, surge_len, skvaj, n_surge):
+    """null_len - определяет длину нулевого участка
+    surge_len - длина скачка
+    skvaj - коэффициент - часть null_len между скачками
+    n_surge - количество скачков"""
+    # 0
+    surge = np.array([0] * int(null_len * skvaj))
+    surge_indexes = np.array([])
+    n = n_surge
+
+    while n:
+        n -= 1
+        # 1
+        surge_indexes = np.append(surge_indexes, [i for i in range(surge.size, surge.size + surge_len)])
+        surge = np.append(surge, [((x / (surge_len / 4)) ** 2) / 2 for x in range(surge_len // 4)])
+        surge = np.append(surge,
+                          [(1 - ((x - surge_len / 4) / (surge_len / 4)) ** 2) / 2 + 0.5 for x in range(surge_len // 4)])
+        surge = np.append(surge, [1 - (((x / (surge_len / 4)) ** 2) / 2) for x in range(surge_len // 4)])
+        surge = np.append(surge,
+                          [1 - ((1 - ((x - surge_len / 4) / (surge_len / 4)) ** 2) / 2 + 0.5)
+                           for x in range(surge_len // 4)])
+        surge = np.append(surge, ([0] * int(null_len * skvaj)))
+        # 0
+        surge = np.append(surge, ([0] * int(null_len * skvaj)))
+
+    return surge, surge_indexes
+
+
+def get_high_cos(null_len, surge_len, skvaj, n_surge):
+    """null_len - определяет длину нулевого участка
+    surge_len - длина скачка
+    skvaj - коэффициент - часть null_len между скачками
+    n_surge - количество скачков"""
+    # 0
+    surge = np.array([0] * int(null_len * skvaj))
+    surge_indexes = np.array([])
+    n = n_surge
+    x_array = np.linspace(np.pi, 3 * np.pi, surge_len)
+    while n:
+        n -= 1
+        # 1
+        surge_indexes = np.append(surge_indexes, [i for i in range(surge.size, surge.size + surge_len)])
+        surge = np.append(surge, [np.cos(x) + 1 for x in x_array])
+        # 0
+        surge = np.append(surge, ([0] * int(null_len * skvaj)))
+
+    return surge, surge_indexes
 
 
 def research_surge(surge_ps, surge_ps_index, step_win, koef_porog_, num_test, p_osh_array, n_surge):
     """Исследование скачка постоянной составляющей"""
-    # Скачок постоянной составляющей
-    #surge_ps, surge_ps_index = get_post_sost(null_len, surge_len, 1)
 
     # Определим оптимальные параметры окна и порог
     win_, win_bef_, win_aft, max_prob_val = optimum_win_param(surge_ps, step_win)
@@ -46,10 +114,10 @@ def research_surge(surge_ps, surge_ps_index, step_win, koef_porog_, num_test, p_
     prob_ = f_probability(surge_ps, win_bef_, win_aft)
 
     # Определение веоятностных характеристик
-    print("\n\nОпределение вероятностных характеристик")
-    num_po = list()
-    num_lt = list()
-    num_pc = list()
+    print("\nОпределение вероятностных характеристик")
+    num_po = np.array([])
+    num_lt = np.array([])
+    num_pc = np.array([])
     i = 0
     for p_osh in p_osh_array:
         i += 1
@@ -61,13 +129,13 @@ def research_surge(surge_ps, surge_ps_index, step_win, koef_porog_, num_test, p_
                                                      porog_,
                                                      surge_ps_index,
                                                      p_osh)
-        num_po.append(num_po_)
-        num_lt.append(num_lt_)
-        num_pc.append(num_pc_)
-    po_ = np.array(num_po)/num_test/n_surge
-    lt_ = np.array(num_lt)/num_test/n_surge
-    pc_ = np.array(num_pc)/num_test/n_surge
-    return surge_ps, prob_, po_, lt_, pc_, win_, win_bef_, win_aft, porog_
+        num_po = np.append(num_po, num_po_)
+        num_lt = np.append(num_lt, num_lt_)
+        num_pc = np.append(num_pc, num_pc_)
+    po_ = num_po/num_test/n_surge
+    lt_ = num_lt/num_test/n_surge
+    pc_ = num_pc/num_test/n_surge
+    return prob_, po_, lt_, pc_, win_, win_bef_, win_aft, porog_
 
 
 def f_probability(data_, before_win_len, after_win_len):
@@ -76,12 +144,15 @@ def f_probability(data_, before_win_len, after_win_len):
     before_win_len - длина окна до скачка
     after_win_len - длина окна после скачка"""
     # Формирование массива для хранения значений отношения правдободобия скользящего окна
-    probability = [0] * (len(data_) - before_win_len - after_win_len)
-    for i in range(len(data_) - before_win_len - after_win_len):
+    probability = np.array([0] * (data_.size - before_win_len - after_win_len))
+    for i in range(data_.size - before_win_len - after_win_len):
         # Математическое ожидание окна до скачка
         mean_before = np.mean(data_[i:i + before_win_len])
         # Математическое ожидание окна после скачка
         mean_after = np.mean(data_[i + before_win_len:i + before_win_len + after_win_len])
+        print(i + before_win_len)
+        print(i + before_win_len + after_win_len)
+        print(len(data_))
         # Дисперсия окна обоих окон
         var_all = np.var(data_[i:i + before_win_len + after_win_len])
         if var_all == 0:
@@ -91,7 +162,11 @@ def f_probability(data_, before_win_len, after_win_len):
         for j in range(after_win_len):
             summ += data_[i + before_win_len + j] - mean_before - (mean_after - mean_before) / 2
         # Расчет отношения правдоподобия
-        probability[i] = (mean_after - mean_before)*summ/var_all
+        print(mean_after)
+        print(mean_before)
+        print(summ)
+        print(var_all)
+        probability[i] = (mean_after - mean_before) * summ / var_all
     return probability
 
 
@@ -100,16 +175,16 @@ def optimum_win_param(signal, step_win):
     signal - входной временной ряд
     step_win - шаг изменения размера окна (четное)"""
     print("\nПоиск оптимальных параметров окна по максимуму функции отношения правдоподобия.")
-    max_len_win = len(signal)  # Максимальный размер окна не превышает половины длины временного ряда
+    max_len_win = signal.size  # Максимальный размер окна не превышает половины длины временного ряда
     len_win_cur = np.arange(step_win, max_len_win, step_win)  # Текущий размер окна
-    len_win_bef = np.arange(int(step_win/2), max_len_win - int(step_win/2), int(step_win/2))  #
-    max_prob = np.zeros([len(len_win_cur), len(len_win_bef)])
-    numtest_win = len(len_win_cur)
-    numtest_win_bef = len(len_win_bef)
+    len_win_bef = np.arange(step_win // 2, max_len_win - (step_win // 2), step_win//2)  #
+    max_prob = np.zeros([len_win_cur.size, len_win_bef.size])
+    numtest_win = len_win_cur.size
+    numtest_win_bef = len_win_bef.size
     numtest = numtest_win * numtest_win_bef
     i = 0
-    for len_win_ind in range(len(len_win_cur)):
-        for len_win_bef_ind in range(len(len_win_bef)):
+    for len_win_ind in range(len_win_cur.size):
+        for len_win_bef_ind in range(len_win_bef.size):
             if len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind] < 2:
                 i += 1
                 continue
@@ -131,24 +206,48 @@ def optimum_win_param(signal, step_win):
     return win, win_bef, win_aft, max_prob_val
 
 
+def full_surf_win_param(signal, step_win):
+    """Функция определения оптимальных размеров окна, участка до скачка и участка после скачка
+    signal - входной временной ряд
+    step_win - шаг изменения размера окна (четное)"""
+    print("\nПостроение поверхности отношения прадоподобия.")
+    max_len_win = signal.size  # Максимальный размер окна не превышает половины длины временного ряда
+    len_win_cur = np.arange(step_win, max_len_win, step_win)  # Текущий размер окна
+    len_win_bef = np.arange(step_win // 2, max_len_win - (step_win // 2), step_win//2)  #
+    max_prob = np.zeros([len_win_cur.size, len_win_bef.size])
+    numtest_win = len_win_cur.size
+    numtest_win_bef = len_win_bef.size
+    numtest = numtest_win * numtest_win_bef
+    i = 0
+    for len_win_ind in range(len_win_cur.size):
+        for len_win_bef_ind in range(len_win_bef.size):
+            len_win_aft = len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind]
+            max_prob[len_win_ind][len_win_bef_ind] = \
+                max(f_probability(signal, len_win_bef[len_win_bef_ind], len_win_aft))
+            i += 1
+            print('\rТест (%d : %d): %d/%d' % (numtest_win, numtest_win_bef, i, numtest), end='')
+
+    return max_prob, len_win_cur, len_win_bef
+
+
 def add_nois(sig_, p):
-    sig = copy.copy(sig_)
+    sig = np.copy(sig_)
     if p == 0:
         return sig
-    num_rand = int(round(len(sig)*p + 0.5))
-    n_sample = np.random.randint(0, len(sig), num_rand)
-    for i in range(len(n_sample)):
+    num_rand = int(round(sig.size * p + 0.5))
+    n_sample = np.random.randint(0, sig.size, num_rand)
+    for i in range(n_sample.size):
         sig[n_sample[i]] = np.random.random()
     return sig
 
 
 def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach, p):
 
-    if len(indexes_skach):
+    if indexes_skach.size:
         num_skach = 1
     else:
         return
-    for l in range(1, len(indexes_skach)):
+    for l in range(1, indexes_skach.size):
         if indexes_skach[l] - indexes_skach[l-1] > 1:
             num_skach += 1
     num_po = 0  # Правильное обнаружение
@@ -162,17 +261,17 @@ def test_probability(num_test, insignal, win_bef, win_aft, porog, indexes_skach,
         num_lt_test = 0  # Ложная тревога
         num_pc_test = 0  # Пропуск цели
         while True:  # Проверяем превышение порога функцией правдоподобия
-            if k >= (len(prob)-1):
+            if k >= (prob.size - 1):
                 break
             if prob[k] < porog:
                 k += 1
                 continue
             else:  # Подсчитываем индексы значений функциии правдоподобия, превышающих порог
-                indexes_prob = list()
+                indexes_prob = np.array([])
                 while prob[k] > porog:
-                    if k >= (len(prob)-1):
+                    if k >= (prob.size-1):
                         break
-                    indexes_prob.append(k + win_bef)
+                    indexes_prob = np.append(indexes_prob, k + win_bef)
                     k += 1
                 # Сверяем обнаруженные индексы с индексами скачка
                 obn = False

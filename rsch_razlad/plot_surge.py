@@ -33,12 +33,14 @@ with open(path, 'rb') as f:
     # have to specify it.
     surges = pickle.load(f)
 
+d_graph_surge = []
+area = DockArea()
+pen_surge = pg.mkPen(color='b', width=2)
+pen_prob = pg.mkPen(color='r', width=2)
+pen_porog = pg.mkPen(color='g', width=2)
 for cur_surge in surges:
-    pen_surge = pg.mkPen(color='b', width=2)
-    pen_prob = pg.mkPen(color='r', width=2)
-    pen_porog = pg.mkPen(color='g', width=2)
     graph_surge = pg.PlotWidget(title='Скачок и функция отношения правдоподобия')
-    plot_surge = graph_surge.plot(y=[i*int(0.95*cur_surge['opt']['porog']) for i in cur_surge['surge']],
+    plot_surge = graph_surge.plot(y=[i*0.95*cur_surge['opt']['porog'] for i in cur_surge['surge']],
                                   pen=pen_surge,
                                   name='Скачок')
     plot_prob = graph_surge.plot(y=cur_surge['prob'],
@@ -59,17 +61,17 @@ for cur_surge in surges:
     leg.addItem(plot_porog, 'Порог')
     leg.setParentItem(graph_surge.graphicsItem())
 
-    d_graph_surge = Dock(cur_surge['name'], size=(500, 300), closable=False)
-    d_graph_surge.addWidget(graph_surge)
-    area = DockArea()
-    area.addDock(d_graph_surge)
-    # Сформируем окошко
-    doc_win = QtGui.QMainWindow()
-    doc_win.resize(800, 800)
-    doc_win.setCentralWidget(area)
-    doc_win.setWindowTitle("График скачка и функции ОП")
-    # Показываем виджет
-    doc_win.show()
+    d_graph_surge.append(Dock(cur_surge['name'], size=(500, 300), closable=False))
+    d_graph_surge[-1].addWidget(graph_surge)
+
+    area.addDock(d_graph_surge[-1])
+# Сформируем окошко
+doc_win = QtGui.QMainWindow()
+doc_win.resize(800, 800)
+doc_win.setCentralWidget(area)
+doc_win.setWindowTitle("График скачка и функции ОП")
+# Показываем виджет
+doc_win.show()
 
 if __name__ == '__main__':
     import sys
