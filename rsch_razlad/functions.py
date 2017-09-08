@@ -150,9 +150,6 @@ def f_probability(data_, before_win_len, after_win_len):
         mean_before = np.mean(data_[i:i + before_win_len])
         # Математическое ожидание окна после скачка
         mean_after = np.mean(data_[i + before_win_len:i + before_win_len + after_win_len])
-        print(i + before_win_len)
-        print(i + before_win_len + after_win_len)
-        print(len(data_))
         # Дисперсия окна обоих окон
         var_all = np.var(data_[i:i + before_win_len + after_win_len])
         if var_all == 0:
@@ -162,11 +159,10 @@ def f_probability(data_, before_win_len, after_win_len):
         for j in range(after_win_len):
             summ += data_[i + before_win_len + j] - mean_before - (mean_after - mean_before) / 2
         # Расчет отношения правдоподобия
-        print(mean_after)
-        print(mean_before)
-        print(summ)
-        print(var_all)
-        probability[i] = (mean_after - mean_before) * summ / var_all
+        try:
+            probability[i] = (mean_after - mean_before) * summ / var_all
+        except BaseException as err:
+            print(err)
     return probability
 
 
@@ -210,24 +206,27 @@ def full_surf_win_param(signal, step_win):
     """Функция определения оптимальных размеров окна, участка до скачка и участка после скачка
     signal - входной временной ряд
     step_win - шаг изменения размера окна (четное)"""
-    print("\nПостроение поверхности отношения прадоподобия.")
-    max_len_win = signal.size  # Максимальный размер окна не превышает половины длины временного ряда
-    len_win_cur = np.arange(step_win, max_len_win, step_win)  # Текущий размер окна
-    len_win_bef = np.arange(step_win // 2, max_len_win - (step_win // 2), step_win//2)  #
-    max_prob = np.zeros([len_win_cur.size, len_win_bef.size])
-    numtest_win = len_win_cur.size
+    print("\n\nПостроение поверхности отношения прадоподобия.")
+    max_len_win = signal.size / 2  # Максимальный размер окна не превышает половины длины временного ряда
+    len_win_bef = np.arange(step_win // 2, max_len_win - (step_win // 2), step_win // 2, dtype=np.int16)  #
+    len_win_aft = np.arange(step_win // 2, max_len_win - (step_win // 2), step_win // 2, dtype=np.int16)  #
+    max_prob = np.zeros([len_win_bef.size, len_win_aft.size])
+    numtest_win_aft = len_win_aft.size
     numtest_win_bef = len_win_bef.size
-    numtest = numtest_win * numtest_win_bef
+    numtest = numtest_win_aft * numtest_win_bef
     i = 0
-    for len_win_ind in range(len_win_cur.size):
-        for len_win_bef_ind in range(len_win_bef.size):
-            len_win_aft = len_win_cur[len_win_ind] - len_win_bef[len_win_bef_ind]
-            max_prob[len_win_ind][len_win_bef_ind] = \
-                max(f_probability(signal, len_win_bef[len_win_bef_ind], len_win_aft))
+    for len_win_bef_i in range(len_win_bef.size):
+        for len_win_aft_i in range(len_win_aft.size):
+            try:
+                max_prob[len_win_bef_i, len_win_aft_i] = \
+                    max(f_probability(signal,
+                                      len_win_bef[len_win_bef_i],
+                                      len_win_aft[len_win_aft_i]))
+            except BaseException as err:
+                print(err)
             i += 1
-            print('\rТест (%d : %d): %d/%d' % (numtest_win, numtest_win_bef, i, numtest), end='')
-
-    return max_prob, len_win_cur, len_win_bef
+            print('\rТест (%d : %d): %d/%d' % (numtest_win_bef, numtest_win_aft, i, numtest), end='')
+    return max_prob, len_win_bef, len_win_aft
 
 
 def add_nois(sig_, p):

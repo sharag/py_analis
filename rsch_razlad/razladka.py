@@ -36,8 +36,7 @@ prob, po, lt, pc, win, win_bef, win_aft, porog = research_surge(surge,
                                                                 num_test,
                                                                 p_osh_array,
                                                                 n_surge)
-max_prob_surf, len_win_x, len_win_bef_y = full_surf_win_param(surge, step_win)
-
+max_prob_surf, len_win_bef_x, len_win_aft_y = full_surf_win_param(surge, step_win)
 surges.append({'name': 'Прямоугольный импульс',
                'surge': surge,
                'prob': prob,
@@ -46,8 +45,8 @@ surges.append({'name': 'Прямоугольный импульс',
                'PC': pc,
                'p_osh_array': p_osh_array,
                'surf': {'surf': max_prob_surf,
-                        'x': len_win_x,
-                        'y': len_win_bef_y},
+                        'x': len_win_bef_x,
+                        'y': len_win_aft_y},
                'opt': {'win': win,
                        'win_bef': win_bef,
                        'win_aft': win_aft,
@@ -64,7 +63,7 @@ prob, po, lt, pc, win, win_bef, win_aft, porog = research_surge(surge,
                                                                 num_test,
                                                                 p_osh_array,
                                                                 n_surge)
-
+max_prob_surf, len_win_bef_x, len_win_aft_y = full_surf_win_param(surge, step_win)
 surges.append({'name': 'Импульс с линейным изменением значений',
                'surge': surge,
                'prob': prob,
@@ -72,6 +71,9 @@ surges.append({'name': 'Импульс с линейным изменением 
                'LT': lt,
                'PC': pc,
                'p_osh_array': p_osh_array,
+               'surf': {'surf': max_prob_surf,
+                        'x': len_win_bef_x,
+                        'y': len_win_aft_y},
                'opt': {'win': win,
                        'win_bef': win_bef,
                        'win_aft': win_aft,
@@ -88,7 +90,7 @@ prob, po, lt, pc, win, win_bef, win_aft, porog = research_surge(surge,
                                                                           num_test,
                                                                           p_osh_array,
                                                                           n_surge)
-
+max_prob_surf, len_win_bef_x, len_win_aft_y = full_surf_win_param(surge, step_win)
 surges.append({'name': 'Импульс с квадратическим изменением значений',
                'surge': surge,
                'prob': prob,
@@ -96,6 +98,9 @@ surges.append({'name': 'Импульс с квадратическим изме�
                'LT': lt,
                'PC': pc,
                'p_osh_array': p_osh_array,
+               'surf': {'surf': max_prob_surf,
+                        'x': len_win_bef_x,
+                        'y': len_win_aft_y},
                'opt': {'win': win,
                        'win_bef': win_bef,
                        'win_aft': win_aft,
@@ -112,7 +117,7 @@ prob, po, lt, pc, win, win_bef, win_aft, porog = research_surge(surge,
                                                                 num_test,
                                                                 p_osh_array,
                                                                 n_surge)
-
+max_prob_surf, len_win_bef_x, len_win_aft_y = full_surf_win_param(surge, step_win)
 surges.append({'name': 'Импульс типа приподнятого косинуса',
                'surge': surge,
                'prob': prob,
@@ -120,6 +125,9 @@ surges.append({'name': 'Импульс типа приподнятого кос�
                'LT': lt,
                'PC': pc,
                'p_osh_array': p_osh_array,
+               'surf': {'surf': max_prob_surf,
+                        'x': len_win_bef_x,
+                        'y': len_win_aft_y},
                'opt': {'win': win,
                        'win_bef': win_bef,
                        'win_aft': win_aft,
