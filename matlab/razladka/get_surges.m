@@ -5,17 +5,18 @@ function [surge_ps, surge_lin, surge_kvadr, surge_highcos] = get_surges(null_len
     % n_surge - количество скачков
 
     % —качок посто€нной составл€ющей
-    surge_ps = zeros(1, floor(null_len * skvaj))
-    surge_ps_ind = zeros(0)
-    n = n_surge
+    surge_ps = zeros(1, floor(null_len * skvaj));
+    surge_ps_ind = zeros(0);
+    n = n_surge;
     while n > 0
-        n = n - 1
+        n = n - 1;
         % 1
         surge_ps_ind = [surge_ps_ind, length(surge_ps) : 1 : (length(surge_ps) + floor(null_len * skvaj))];
-        surge_ps = [surge_ps, ones(1, surge_len)]
+        surge_ps = [surge_ps, ones(1, surge_len)];
         % 0
-        surge_ps = [surge_ps, zeros(1, floor(null_len * skvaj))]
+        surge_ps = [surge_ps, zeros(1, floor(null_len * skvaj))];
     end
+end
 
 
 
