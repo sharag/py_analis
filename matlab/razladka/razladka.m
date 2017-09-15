@@ -1,5 +1,7 @@
 %% Описание
 % Модуль исследования разладки
+clc
+clear 
 
 %% Характеристики исследования
 null_len = 100;  % длина холостого участка
@@ -14,8 +16,13 @@ koef_porog_ = 0.9;  % Пороговое значение как коэффициент, определяющий долю от м
 
 %% Формирование скачков
 
-[surge_ps, surge_ps_ind] = get_surge_ps(null_len, surge_len, skvaj, n_surge);
-[surge_x1, surge_x1_ind] = get_surge_x1(null_len, surge_len, skvaj, n_surge);
-[surge_x2, surge_x2_ind] = get_surge_x2(null_len, surge_len, skvaj, n_surge);
-%surge_ps, surge_lin, surge_kvadr, surge_highcos = get_surge_ps(null_len, surge_len, skvaj, n_surge);
+[surge_ps, surge_ps_ind] = ...
+    get_surge_ps(null_len, surge_len, skvaj, n_surge);
+[surge_x1, surge_x1_ind] = ...
+    get_surge_x1(null_len, surge_len, skvaj, n_surge);
+[surge_x2, surge_x2_ind] = ...
+    get_surge_x2(null_len, surge_len, skvaj, n_surge);
+[surge_hcos, surge_hcos_ind] = ...
+    get_surge_hcos(null_len, surge_len, skvaj, n_surge);
 
+%% Решение 
