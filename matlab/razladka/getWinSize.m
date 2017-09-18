@@ -20,8 +20,6 @@ function [win, winBef, winAft, maxProbVal] = getWinSize(s, stepWin)
             maxProb(i_lw, i_lwb) = ...
                 max(get_probability(s, lenWinBef(i_lwb), lenWinAft));
             j = j + 1;
-
-
         end
         disp(['Тест (' num2str(numTestWin) ' : ' num2str(numTestBef) ...
             '): ' num2str(j) '/' num2str(numTest)])

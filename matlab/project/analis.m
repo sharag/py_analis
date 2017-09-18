@@ -37,6 +37,7 @@ FGrafBuildW(WaweData, psi_WData, freqDiskrData);
 % Сохранение результатов построения вейвлета
 save([pathRez 'WData.mat']);
 save([pathRez 'Data.mat'], 'baseTMPData');
+
 %% Вейвлет-анализ набора функциональных ТМП
 % Загрузка переменных
 if ~exist('defDir', 'var')
