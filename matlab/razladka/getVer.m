@@ -1,4 +1,4 @@
-function [ po, lt, pc ] = getVer( s, sInd, koefPorog, numTest, Posh, num_s, numOrder, winBef, winAft)
+function [ numPO, numLT, numPC ] = getVer( s, sInd, koefPorog, numTest, Posh, num_s, numOrder, winBef, winAft)
 %GETVER Функция рассчета вероятностных характеристик обнаружения скачков
 
 
@@ -21,28 +21,35 @@ for i = 2:1:length(sInd)
         indCurSurge = 1;
     else
         surgeInd(cur_surge, indCurSurge) = sInd(i);
+        indCurSurge = indCurSurge + 1;
     end
 end
 
 % Цикл по количеству значений вероятности ошибки на бит
 for pInd = 1:1:lenPosh
-    disp(['Тест (' num2str(pInd) ' / ' num2str(lenPosh)])
+    disp(['Тест (' num2str(pInd) ' / ' num2str(lenPosh) ')'])
     
     % Цикл по количеству экспериментов
     for curTest = 1:1:numTest
         % Добавляем шумов
         sBad = s;
         numBadSample = floor(length(sBad) * Posh(pInd) + 0.5);
-        badSamples = randi([0 length(sBad)], [1 numBadSample]);
-        badValues = randi([0 (2 ^ numOrder)], [1 numBadSample]);
+        badSamples = randi([1 length(sBad)], [1 numBadSample]);
         for iSample = 1:1:numBadSample
-            sBad(badSamples(iSample)) = badValues(iSample);
+            badValueOrd = randi([0 numOrder], 1) + 1;
+            if bitget(sBad(badSamples(iSample)), badValueOrd)
+                sBad(badSamples(iSample)) = ...
+                    bitset(sBad(badSamples(iSample)), badValueOrd, 0);
+            else
+                sBad(badSamples(iSample)) = ...
+                    bitset(sBad(badSamples(iSample)), badValueOrd, 1);
+            end
         end
         
         % Вычисляем функцию отношения правдоподобия
-        probability = get_probability( sBad, winBef, winAft );
-        % Определяем 
-        maxProb = max(probability);
+        probability__ = get_probability( sBad, winBef, winAft );
+        % Определяем
+        maxProb = max(probability__);
         porog = koefPorog * maxProb;
         
         % Проверяем превышение функцией отношения правдоподобия
@@ -60,159 +67,81 @@ for pInd = 1:1:lenPosh
         % Порядковый номер значения ФПО, превысившего порог
         numProbInd = 0;
         % Проверяем превышение порога функцией правдоподобия
-        while 1 
-            if k >= (length(probability) - 1)
+        while 1
+            if k >= (length(probability__) - 1)
                 break;
             end
-            if probability(k) < porog
+            if probability__(k) < porog
                 k = k + 1;
                 continue;
             else % Подсчитываем индексы значений функциии
                 % правдоподобия, превышающих порог
-                while probability(k) > porog
-                    if k >= (length(probability) - 1)
+                while probability__(k) > porog
+                    if k >= (length(probability__) - 1)
                         break;
                     end
                     numProbInd = numProbInd + 1;
                     probInd(numProbInd) = k + winBef;
                     k = k + 1;
                 end
-                
-                % Сверяем обнаруженные индексы с индексами скачка
-                %obn = false;
-                %                 obn = False
-                %                 for ind in indexes_prob:
-                %                     if ind in indexes_skach:
-                %                         obn = True
-                %                         break
-                %                 # принимаем решение: обнаружение или ложная тревога
-                %                 if obn:
-                %                     num_po_test += 1
-                %                 else:
-                %                     num_lt_test += 1
-                
             end
-            
-            % Сверяем индексы обнаруженных участков с индексами скачка и
-            % определяем количество событий ПО, ЛТ, ПЦ
-            statObn = [];
-            for nSurge = 1:1:size(surgeInd, 1)
-                statObn(nSurge) = 0;
-                nObnInd = 2;
-                nObnSurge = 1;
-                while 1
-                    if probInd(nObnInd) - probInd(nObnInd - 1) > 1
-                        nObnSurge = nObnSurge + 1;
+        end
+        if isempty(probInd)
+            numPC(pInd) = numPC(pInd) + num_s;
+            break;
+        end
+        
+        % Сверяем индексы обнаруженных участков с индексами скачка и
+        % определяем количество событий ПО, ЛТ, ПЦ
+        statObn = [];
+        for nSurge = 1:1:num_s
+            nObnInd = 1;
+            nObnSurge = 1;
+            while 1
+                for nSample = 1:1:size(surgeInd, 2)
+                    statObn(nSurge, nObnSurge) = 0;
+                    if isempty(probInd)
+                        disp('11')
                     end
-                    for nSample = 1:1:size(surgeInd, 2)
-                        if probInd(nObnInd) == surgeInd(nSurge, nSample)
-                            statObn(nSurge) = statObn(nSurge) + 1;
-                        end
+                    if probInd(nObnInd) == surgeInd(nSurge, nSample)
+                        statObn(nSurge, nObnSurge) = 1;
+                        break;
                     end
                 end
-                
-                    
-                    
-                    
-                    
-                    for nObnind = 1:1:length(probInd)
-                        
-                    end
-                    
+                if length(probInd) == nObnInd
+                    break
+                end
+                nObnInd = nObnInd + 1;
+                if probInd(nObnInd) - probInd(nObnInd - 1) > 1
+                    nObnSurge = nObnSurge + 1;
                 end
             end
-    %                 obn = False
-    %                 for ind in indexes_prob:
-    %                     if ind in indexes_skach:
-    %                         obn = True
-    %                         break
-            
-            
-            
-            
-            
             
         end
+        
+        % Оценка соответствия обнаруженных и реальных скачков
+        for i_s = 1:1:num_s
+            obnSign = false;
+            for i_p = 1:1:size(statObn, 2)
+                if statObn(i_s, i_p)
+                    if i_s == i_p
+                        numPOtest = numPOtest + 1;
+                        obnSign = true;
+                    else
+                        numLTtest = numLTtest + 1;
+                    end
+                end
+            end
+            if ~obnSign
+                numPCtest = numPCtest + 1;
+            end
+        end
+        numPC(pInd) = numPC(pInd) + numPCtest;
+        numPO(pInd) = numPO(pInd) + numPOtest;
+        numLT(pInd) = numLT(pInd) + numLTtest;
     end
-    
-    
-    
-    
-    num_po = np.append(num_po, num_po_)
-    num_lt = np.append(num_lt, num_lt_)
-    num_pc = np.append(num_pc, num_pc_)
-    po_ = num_po/num_test/n_surge
-    lt_ = num_lt/num_test/n_surge
-    pc_ = num_pc/num_test/n_surge
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    %
-    %
-    %
-    %
-    %     num_po = 0  # Правильное обнаружение
-    %     num_lt = 0  # Ложная тревога
-    %     num_pc = 0  # Пропуск цели
-    %     for i in range(num_test):  # Испытания
-    %         signal = add_nois(insignal, p)
-    %         prob = f_probability(signal, win_bef, win_aft)
-    %         k = 0
-    %         num_po_test = 0  # Правильное обнаружение
-    %         num_lt_test = 0  # Ложная тревога
-    %         num_pc_test = 0  # Пропуск цели
-    %         while True:  # Проверяем превышение порога функцией правдоподобия
-    %             if k >= (prob.size - 1):
-    %                 break
-    %             if prob[k] < porog:
-    %                 k += 1
-    %                 continue
-    %             else:  # Подсчитываем индексы значений функциии правдоподобия, превышающих порог
-    %                 indexes_prob = np.array([])
-    %                 while prob[k] > porog:
-    %                     if k >= (prob.size-1):
-    %                         break
-    %                     indexes_prob = np.append(indexes_prob, k + win_bef)
-    %                     k += 1
-    
-    
-    
-    %                 # Сверяем обнаруженные индексы с индексами скачка
-    %                 obn = False
-    %                 for ind in indexes_prob:
-    %                     if ind in indexes_skach:
-    %                         obn = True
-    %                         break
-    %                 # принимаем решение: обнаружение или ложная тревога
-    %                 if obn:
-    %                     num_po_test += 1
-    %                 else:
-    %                     num_lt_test += 1
-    %         if num_po_test < num_skach:
-    %             num_pc_test = num_skach - num_po_test
-    %         if num_po_test > num_skach:
-    %             num_lt_test += num_po_test - num_skach
-    %             num_po_test = num_skach
-    %         num_po += num_po_test
-    %         num_lt += num_lt_test
-    %         num_pc += num_pc_test
-    %     return num_po, num_lt, num_pc
-    %
-    %
+    numPC(pInd) = numPC(pInd) ./ numTest ./ num_s;
+    numPO(pInd) = numPO(pInd) ./ numTest ./ num_s;
+    numLT(pInd) = numLT(pInd) ./ numTest ./ num_s;
 end
 end

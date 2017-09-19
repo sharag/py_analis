@@ -1,7 +1,7 @@
 function [win, winBef, winAft, maxProbVal] = getWinSize(s, stepWin)
 %GETWINSIZE Функция определения оптимальных размеров окна
 %   участка до скачка и участка после скачка
-    maxWin = length(s) - stepWin;
+    maxWin = length(s) / 2;
     lenWinCur = stepWin : stepWin : maxWin;
     lenWinBef = stepWin / 2 : stepWin / 2 : maxWin - stepWin / 2;
     maxProb = zeros(length(lenWinCur), length(lenWinBef));
