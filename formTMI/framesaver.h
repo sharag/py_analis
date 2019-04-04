@@ -30,8 +30,7 @@ public:
     ~frameSaver();
     int appendFrame(QVector <sincFindRezSt*>* rezultsSinc);
     void appendFrame(frameSt* frame);
-    void countRestor();
-    QList <frameSt*> frames;
+    QVector <frameSt*> frames;
     QString fname;
     int goalCountLen;
 
@@ -52,6 +51,10 @@ private:
     QList <interval>* intervals;
     float bitTime; // Время на один бит в милисекундах
     qint64 maxCountVal;
+
+    QVector <char> data; // Массив под данные
+    QVector <char> baddata; // Массив под данные
+    QVector <char> tempData;
 
 signals:
     //void sendError(QString);

@@ -30,7 +30,7 @@ void fileWriter::addData(QString CurStr)
     //const char * ptrStr = CurStr.toLocal8Bit().constData();
     QVector<char> data;
     for (int i = 0; i < CurStr.length(); i++)
-        data.append(CurStr.at(i).cell());
+        data.append(char(CurStr.at(i).cell()));
         //data.append(*(ptrStr + i));
 
     if (!data.length())
@@ -49,6 +49,8 @@ void fileWriter::addData(QString CurStr)
         writeToFile();
     if (data.length())
         addData(data);
+    data.clear();
+    data.squeeze();
 }
 
 
@@ -71,6 +73,8 @@ void fileWriter::addData(QVector<char> data)
         writeToFile();
     if (data.length())
         addData(data);
+    data.clear();
+    data.squeeze();
 }
 
 
@@ -86,8 +90,8 @@ void fileWriter::writeToFile()
             strToLog = "fileWriter: Error write file: " + outFile.fileName();
             emit sendStrToLog(strToLog);
         }
-        curBuff->~QVector();
-        curBuff = new QVector<char>;
+        curBuff->clear();
+        curBuff->squeeze();
     }
     else
     {
@@ -101,6 +105,8 @@ void fileWriter::writeToFile()
 fileWriter::~fileWriter()
 {
     writeToFile();
+    curBuff->clear();
+    curBuff->squeeze();
     strToLog = "fileWriter: Save data to file!";
     qDebug() << strToLog;
     emit sendStrToLog(strToLog);

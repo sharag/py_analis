@@ -43,6 +43,8 @@ private:
                      int numSyncBit,
                      int winSize);
 
+    QList<QTime> begTimes;
+
 signals:
     void sendProgress(int,
                       QString);

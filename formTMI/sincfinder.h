@@ -22,13 +22,14 @@ private:
     qint64 findNextSinc(int itSinc,
                         qint64 startBit,
                         QVector <sincFindRezSt*>* rezultsSinc);
-    //QVector <sincParamRaw*> sincVectRaw;
     bool checkFirst(int itSinc);
     bool checkLast(int itSinc);
     bool checkHam(QVector<char>* bufForVerify,
                   sincFindRezSt* rezultsSinc,
                   int itSinc,
                   int hamDist);
+    void deleteBuff(QVector<char> bufForVerify);
+    QVector<char> bufForVerify; // Текущий буффер для проверки
 };
 
 #endif // SINCFINDER_H

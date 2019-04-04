@@ -107,6 +107,14 @@ void MainWindow::on_pushButtonStart_clicked()
     countParam.countLen = ui->spinBoxCountLen->value();
     countParam.countPos = ui->spinBoxCountPos->value() - 1;
     countParam.joinFramesSign = ui->checkBoxJoinFrames->isChecked();
+    if (countParam.joinFramesSign &&                                                //Если используется счетчик
+            (countParam.countPos + countParam.countLen + 1) > frameParam.lenFrame)  // и его позиция выходит за пределы кадра
+    {
+        QMessageBox::warning(this,
+                             "ВНИМАНИЕ",
+                             "Заданы неверные параметры счетчика! Последний разряд счетчик не может превышать длину кадра.");
+        return;
+    }
     //Создание объекта класса DMXThread
     commonDmx = new DMXThread(inFiles,
                               outFname,

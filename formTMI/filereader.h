@@ -31,6 +31,7 @@ private:
     qint64 posEndBit;
     qint64 posBegBit;
     QVector<char> curBuff;
+    QVector<char> rawBytes;
     qint64 lastReadVol;
     qint64 curReadVol;
     QString strToLog;

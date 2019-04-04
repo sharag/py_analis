@@ -284,7 +284,7 @@ void DMXThread::run()
 
         // Сортировка по первой позиции с валидным счетчиком.
         // Если нет такой - удаление кадрохранителя и файлочитателя
-        QList<QTime> begTimes;
+
         QTime tempTime;
         int minInd; // временный хранитель индекса
         frameSaver* tempfrsaver; // временный хранитель указателя на кадрохранитель
@@ -502,7 +502,22 @@ void DMXThread::needSendStrToLog(QString str)
 DMXThread::~DMXThread()
 {
     inFreaders.clear();
+    inFreaders.squeeze();
     frsavers.clear();
+    frsavers.squeeze();
+    rezultsSinc->clear();
+    rezultsSinc->squeeze();
+    begTimes.clear();
+    while (sincVect.length())
+    {
+        sincVect.first().sincVal->clear();
+        sincVect.first().sincVal->squeeze();
+        sincVect.first().sincValRev->clear();
+        sincVect.first().sincValRev->squeeze();
+        sincVect.takeFirst();
+    }
+
     delete logWriterObj;
+
     qDebug() << "DMXThread: Destructor.";
 }

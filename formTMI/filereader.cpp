@@ -171,10 +171,10 @@ int fileReader::fileReaderRead(int beginByte)
     }
 
     // установка указателя в файле и чтение байтов
-    QVector<char>* rawBytes;
-    rawBytes = new QVector<char>(numByte);
+
+    rawBytes.resize(numByte);// = new QVector<char>();
     inQFile.seek(beginByte);
-    inQFile.read(rawBytes->data(),
+    inQFile.read(rawBytes.data(),
                  numByte);
     inQFile.close();
 
@@ -187,8 +187,11 @@ int fileReader::fileReaderRead(int beginByte)
 
         //free(&curBuff);
         //delete [] &curBuff[0];
-    curBuff = byteToBit(*rawBytes);
-    delete rawBytes;
+    curBuff = byteToBit(rawBytes);
+
+    rawBytes.clear();
+    rawBytes.squeeze();
+
     posBegBit = beginByte * 8;
     posEndBit = beginByte * 8 + numByte * 8;
 
@@ -217,6 +220,7 @@ fileReader::~fileReader()
 {
     curBuff.clear();
     curBuff.squeeze();
+    delete &curBuff;
     qDebug() << "fileReader: fileReader object is destroed.";
     qDebug() << "fileReader: File name is :" << inFname;
 }

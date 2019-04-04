@@ -277,8 +277,6 @@ void frameSaver::addInterval(frameSt* frame)
 int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
 {
     frameSt *newFrame = new frameSt;
-    QList <char> * data; // Массив под данные
-    data = new QList <char>;
     qint64 bufLen;
     qint64 curBitPos = 0;
     int numEr = 0;
@@ -287,7 +285,7 @@ int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
     for (int i = 0; i < sincVect.length(); i++)
     {
         // Добавляем синхру
-        data->append(sincVect.at(i).sincVal->toList());
+        data.append(*sincVect.at(i).sincVal);
         // Добавляем данные
         curBitPos = rezultsSinc->at(i)->sincPos + sincVect.at(i).sincVal->length();
         if ((sincVect.length() - i) > 1)
@@ -298,30 +296,31 @@ int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
             bufLen = frameParam.lenFrame -
                     sincVect.at(i).sincPos -
                     sincVect.at(i).sincVal->length();
-        QList <char> tempData = fReader->getBits(curBitPos,
-                                                 bufLen).toList();
+        tempData = fReader->getBits(curBitPos,
+                                    bufLen);
         if (tempData.length() != bufLen)
             return -1;
         if (rezultsSinc->at(i)->inverseSign)
             for (int j = 0; j < tempData.length(); j++)
                 tempData.replace(j, !tempData.at(j));
-        data->append(tempData);
+        data.append(tempData);
+        tempData.clear();
+        tempData.squeeze();
         // Добавляем ошибки
         numEr += rezultsSinc->at(i)->numErr;
     }
     // Заполнение кадра
-    QVector <char> vData = data->toVector();
     if (countParam.joinFramesSign)
-        newFrame->frameCNT = getCount(&vData);
+        newFrame->frameCNT = getCount(&data);
     else
         newFrame->frameCNT = -1;
-    newFrame->data = bitToByte(vData);
+    newFrame->data = bitToByte(data);
     newFrame->frameErRate = numEr;
     newFrame->sincPos = rezultsSinc->at(0)->sincPos;
     newFrame->countValidSign = false;
     newFrame->timeFrameS.setHMS(0,0,0);
-    delete data;
-    delete [] &vData[0];
+    data.clear();
+    data.squeeze();
 
     // Проверка на длину кадра
     int numFr4add = 0;
@@ -403,6 +402,8 @@ qint64 frameSaver::getCount(QVector <char>* vData)
     for (int i = 0; i < goalCountLen; i++)
         if (countChar.at(goalCountLen - i - 1))
             countVal |= (begMask << i);
+    countChar.clear();
+    countChar.squeeze();
     return countVal;
 }
 
@@ -411,9 +412,7 @@ qint64 frameSaver::getCount(QVector <char>* vData)
 frameSt * frameSaver::getBadFrame()
 {
     frameSt *badFrame; // Вставляемый кадр
-    QList <char>* baddata; // Массив под данные
     badFrame = new frameSt;
-    baddata = new QList <char>;
     qint64 bufLen;
     // Цикл по синхрокомбинациям
     for (int i = 0; i < sincVect.length(); i++)
@@ -427,7 +426,7 @@ frameSt * frameSaver::getBadFrame()
                     sincVect.at(i).sincPos -
                     sincVect.at(i).sincVal->length();
         // Добавляем синхру
-        baddata->append(sincVect.at(i).sincVal->toList());
+        baddata.append(*sincVect.at(i).sincVal);
         if ((sincVect.length() - i) > 1)
             bufLen = sincVect.at(i + 1).sincPos -
                     sincVect.at(i).sincPos -
@@ -437,13 +436,13 @@ frameSt * frameSaver::getBadFrame()
                     sincVect.at(i).sincPos -
                     sincVect.at(i).sincVal->length();
         for (int j = 0; j < bufLen; j++)
-            baddata->append(0);
+            baddata.append(0);
     }
     // Заполнение кадра
-    QVector <char> badvData = baddata->toVector();
-    delete baddata;
     badFrame->frameCNT = -1;
-    badFrame->data = bitToByte(badvData);
+    badFrame->data = bitToByte(baddata);
+    baddata.clear();
+    baddata.squeeze();
     badFrame->frameErRate = int(pow(2, 16));
     badFrame->sincPos = frames.last()->sincPos + frameParam.lenFrame;
     badFrame->countValidSign = false;
@@ -650,27 +649,16 @@ void frameSaver::countRecovery(int beg, int end)
 }
 
 
-void frameSaver::countRestor()
-{
-    QList <qint64> countList;
-    for (int j = 0; j < frames.length(); j++)
-    {
-        countList.append(frames.at(j)->frameCNT);
-        strToLog = "frameSaver: Frame:\t" + QString::number(j) +
-                ".\tCount:\t" + QString::number(countList.at(j));
-        emit sendStrToLog(strToLog);
-    }
-}
-
-
 frameSaver::~frameSaver()
 {
-    for (int i = 0; i < frames.length(); i++)
+    while (frames.length())
     {
-        frames.at(i)->data.clear();
-        frames.at(i)->data.squeeze();
+        frames.first()->data.clear();
+        frames.first()->data.squeeze();
+        frames.takeFirst();
     }
     frames.clear();
-    //frames.squeeze();
+    frames.squeeze();
+    intervals->clear();
     qDebug() << "frameSaver: Destructor!";
 }
