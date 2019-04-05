@@ -30,21 +30,23 @@ frameSaver::frameSaver(QString fname_,
 }
 
 
-void frameSaver::appendFrame(frameSt* frame)
+void frameSaver::appendFrame(frameSt frame)
 {
-    frameSt* badFrame;
+    frameSt badFrame;
     int curPos;
     QTime tempTime;
     float timeDiffMS = 0;
-    int curNumInt = getNInterval(frame); // Номер интервала, которому принадлежит кадр
+    int curNumInt = getNInterval(&frame); // Номер интервала, которому принадлежит кадр
 
     if (intervals->at(curNumInt).posBegin < 0)
     { // Если в этом интервале нет еще кадров
         if (curNumInt == 0)
         {// Если это первый интервал
-            addFrameInInt(frame,
+            addFrameInInt(&frame,
                           curNumInt,
                           0); // Добавляем сразу
+            frame.data.clear();
+            frame.data.squeeze();
             return;
         }
         else
@@ -60,29 +62,27 @@ void frameSaver::appendFrame(frameSt* frame)
                     intervals->at(curNumInt - 1).intEnd.msec();
             diffInt = diffInt/(bitTime*frameParam.lenFrame*maxCountVal);
 
-            tempTime = frames.last()->timeFrameS;
+            tempTime = frames.last().timeFrameS;
 
             // Вставка BAD кадров до конца предыдущего интервала
             curPos = frames.length() - 1;
-            while (frames.at(curPos)->frameCNT < maxCountVal)
+            while (frames.at(curPos).frameCNT < maxCountVal)
             {
                 timeDiffMS = timeDiffMS + frameParam.lenFrame*bitTime;
                 badFrame = getBadFrame();
-                badFrame->frameCNT = frames.last()->frameCNT + 1;
-                badFrame->frameErRate = int(pow(2, 16));
-                badFrame->countValidSign = true;
-                badFrame->timeFrameS.setHMS(tempTime.hour(),
+                badFrame.frameCNT = frames.last().frameCNT + 1;
+                badFrame.frameErRate = int(pow(2, 16));
+                badFrame.countValidSign = true;
+                badFrame.timeFrameS.setHMS(tempTime.hour(),
                                             tempTime.minute(),
                                             tempTime.second(),
                                             tempTime.msec());
-                badFrame->timeFrameS = badFrame->timeFrameS.addMSecs(int(timeDiffMS));
-                addFrameInInt(badFrame,
-                              getNInterval(badFrame),
+                badFrame.timeFrameS = badFrame.timeFrameS.addMSecs(int(timeDiffMS));
+                addFrameInInt(&badFrame,
+                              getNInterval(&badFrame),
                               curPos + 1);
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                //badFrame->data.clear();
-                //badFrame->data.squeeze();
-                //delete badFrame;
+                badFrame.data.clear();
+                badFrame.data.squeeze();
                 curPos = frames.length() - 1;
             }
 
@@ -93,21 +93,19 @@ void frameSaver::appendFrame(frameSt* frame)
                 {
                     timeDiffMS = timeDiffMS + frameParam.lenFrame*bitTime;
                     badFrame = getBadFrame();
-                    badFrame->frameCNT = i;
-                    badFrame->frameErRate = int(pow(2, 16));
-                    badFrame->countValidSign = true;
-                    badFrame->timeFrameS.setHMS(tempTime.hour(),
+                    badFrame.frameCNT = i;
+                    badFrame.frameErRate = int(pow(2, 16));
+                    badFrame.countValidSign = true;
+                    badFrame.timeFrameS.setHMS(tempTime.hour(),
                                                 tempTime.minute(),
                                                 tempTime.second(),
                                                 tempTime.msec());
-                    badFrame->timeFrameS = badFrame->timeFrameS.addMSecs(int(timeDiffMS));
-                    addFrameInInt(badFrame,
-                                  getNInterval(badFrame),
+                    badFrame.timeFrameS = badFrame.timeFrameS.addMSecs(int(timeDiffMS));
+                    addFrameInInt(&badFrame,
+                                  getNInterval(&badFrame),
                                   curPos + 1);
-                    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //badFrame->data.clear();
-                    //badFrame->data.squeeze();
-                    //delete badFrame;
+                    badFrame.data.clear();
+                    badFrame.data.squeeze();
                     curPos = frames.length() - 1;
                 }
                 diffInt -= 1;
@@ -118,17 +116,17 @@ void frameSaver::appendFrame(frameSt* frame)
     { // Это не первый кадр в интервале
         // Поиск кадра с таким же номером
         for (int i = intervals->at(curNumInt).posBegin; i <= intervals->at(curNumInt).posEnd; i++)
-            if (frames.at(i)->frameCNT == frame->frameCNT)
+            if (frames.at(i).frameCNT == frame.frameCNT)
             {
                 // Если в новом кадре меньше ошибок - замена кадра
-                if (frames.at(i)->frameErRate > frame->frameErRate)
+                if (frames.at(i).frameErRate > frame.frameErRate)
                 {
                     frames.replace(i, frame);
                     strToLog = "Finded repeated frame: first frame: count " +
-                            QString::number(frames.at(i)->frameCNT) + ", number of error " +
-                            QString::number(frames.at(i)->frameErRate) +
-                            "; second frame: count " + QString::number(frame->frameCNT) +
-                             + ", number of error " + QString::number(frame->frameErRate);
+                            QString::number(frames.at(i).frameCNT) + ", number of error " +
+                            QString::number(frames.at(i).frameErRate) +
+                            "; second frame: count " + QString::number(frame.frameCNT) +
+                             + ", number of error " + QString::number(frame.frameErRate);
                     qDebug() << strToLog;
                     emit sendStrToLog(strToLog);
                 }
@@ -139,37 +137,37 @@ void frameSaver::appendFrame(frameSt* frame)
     // Если нет такого же кадра (и это не первый кадр)
     // Добавление BAD кадров до целевого
     qint64 startCount = 0;
-    if (frames.last()->frameCNT == maxCountVal)
+    if (frames.last().frameCNT == maxCountVal)
         startCount = 0;
     else
-        startCount = frames.last()->frameCNT + 1;
+        startCount = frames.last().frameCNT + 1;
 
-    tempTime = frames.last()->timeFrameS;
+    tempTime = frames.last().timeFrameS;
     timeDiffMS = 0;
-    while (startCount < frame->frameCNT)
+    while (startCount < frame.frameCNT)
     {
         timeDiffMS = timeDiffMS + frameParam.lenFrame*bitTime;
         badFrame = getBadFrame();
-        badFrame->frameCNT = startCount;
-        badFrame->frameErRate = int(pow(2, 16));
-        badFrame->countValidSign = true;
-        badFrame->timeFrameS.setHMS(tempTime.hour(),
+        badFrame.frameCNT = startCount;
+        badFrame.frameErRate = int(pow(2, 16));
+        badFrame.countValidSign = true;
+        badFrame.timeFrameS.setHMS(tempTime.hour(),
                                     tempTime.minute(),
                                     tempTime.second(),
                                     tempTime.msec());
-        badFrame->timeFrameS = badFrame->timeFrameS.addMSecs(int(timeDiffMS));
-        addFrameInInt(badFrame,
-                      getNInterval(badFrame),
+        badFrame.timeFrameS = badFrame.timeFrameS.addMSecs(int(timeDiffMS));
+        addFrameInInt(&badFrame,
+                      getNInterval(&badFrame),
                       (frames.length() - 1));
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //badFrame->data.clear();
-        //badFrame->data.squeeze();
-        //delete badFrame;
+        badFrame.data.clear();
+        badFrame.data.squeeze();
         startCount ++;
     }
 
     // Добавление целевого кадра
-    addFrameInInt(frame, getNInterval(frame), frames.length());
+    addFrameInInt(&frame, getNInterval(&frame), frames.length());
+    frame.data.clear();
+    frame.data.squeeze();
     return;
 }
 
@@ -182,7 +180,7 @@ void frameSaver::addFrameInInt(frameSt* frame, int numInt, int pos)
             ", time: " + frame->timeFrameS.toString();
     qDebug() << strToLog;
     emit sendStrToLog(strToLog);
-    frames.insert(pos, frame);
+    frames.insert(pos, *frame);
     interval curInt;
     if (intervals->at(numInt).posBegin < 0) // если этому интервалу не соответсвует ни один кадр
     {
@@ -275,12 +273,6 @@ void frameSaver::addInterval(frameSt* frame)
                 intervals->insert(i, newInt);
                 return;
             }
-    // Если интервал последний, но не первый
-    //if (intervals->length() > 0)
-    //{
-    //    newInt.posBegin = intervals->last().posEnd + 1;
-    //    newInt.posEnd = intervals->last().posEnd + 1;
-    //}
     intervals->append(newInt);
     return;
 }
@@ -288,7 +280,7 @@ void frameSaver::addInterval(frameSt* frame)
 
 int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
 {
-    frameSt *newFrame = new frameSt;
+    frameSt newFrame;
     qint64 bufLen;
     qint64 curBitPos = 0;
     int numEr = 0;
@@ -323,14 +315,14 @@ int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
     }
     // Заполнение кадра
     if (countParam.joinFramesSign)
-        newFrame->frameCNT = getCount(&data);
+        newFrame.frameCNT = getCount(&data);
     else
-        newFrame->frameCNT = -1;
-    newFrame->data = bitToByte(data);
-    newFrame->frameErRate = numEr;
-    newFrame->sincPos = rezultsSinc->at(0)->sincPos;
-    newFrame->countValidSign = false;
-    newFrame->timeFrameS.setHMS(0,0,0);
+        newFrame.frameCNT = -1;
+    newFrame.data = bitToByte(data);
+    newFrame.frameErRate = numEr;
+    newFrame.sincPos = rezultsSinc->at(0)->sincPos;
+    newFrame.countValidSign = false;
+    newFrame.timeFrameS.setHMS(0,0,0);
     data.clear();
     data.squeeze();
 
@@ -340,55 +332,49 @@ int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
     if (!frames.length()) // Если кадр первый, сразу записываем
     {
         frames.append(newFrame);
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //newFrame->data.clear();
-        //newFrame->data.squeeze();
-        //delete newFrame;
         strToLog = "frameSaver: Frame:\t" + QString::number(frames.length()) +
-                "\tSinc pos:\t" + QString::number(newFrame->sincPos) +
-                "\tDelta:\t" + QString::number((newFrame->sincPos-frames.last()->sincPos)) +
-                "\tNumErr:\t" + QString::number(newFrame->frameErRate) +
-                "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
+                "\tSinc pos:\t" + QString::number(newFrame.sincPos) +
+                "\tDelta:\t" + QString::number((newFrame.sincPos-frames.last().sincPos)) +
+                "\tNumErr:\t" + QString::number(newFrame.frameErRate) +
+                "\tframeCNT:\t" + QString::number(newFrame.frameCNT);
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
+        newFrame.data.clear();
+        newFrame.data.squeeze();
         return frames.length();
     }
     else // Если нет - считаем разность между позициями синхрокомбинаций
-        numFr4add = int(roundf(float(newFrame->sincPos-frames.last()->sincPos)/frameParam.lenFrame));
+        numFr4add = int(roundf(float(newFrame.sincPos-frames.last().sincPos)/frameParam.lenFrame));
 
 
     // Оценка приращения
     if (numFr4add == 1) // Если между позициями синхрокомбинаций один кадр
     {
         strToLog = "frameSaver: Frame:\t" + QString::number(frames.length()) +
-                "\tSinc pos:\t" + QString::number(newFrame->sincPos) +
-                "\tDelta:\t" + QString::number((newFrame->sincPos-frames.last()->sincPos)) +
-                "\tNumErr:\t" + QString::number(newFrame->frameErRate) +
-                "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
+                "\tSinc pos:\t" + QString::number(newFrame.sincPos) +
+                "\tDelta:\t" + QString::number((newFrame.sincPos-frames.last().sincPos)) +
+                "\tNumErr:\t" + QString::number(newFrame.frameErRate) +
+                "\tframeCNT:\t" + QString::number(newFrame.frameCNT);
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
         frames.append(newFrame);
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //newFrame->data.clear();
-        //newFrame->data.squeeze();
-        //delete newFrame;
         if (countParam.joinFramesSign)
             checkCount();
+        newFrame.data.clear();
+        newFrame.data.squeeze();
         return frames.length();
     }
     else if (numFr4add < 1) // Если существенно меньше кадра (невыполнимая ветка)
     {
         strToLog = "frameSaver: Frame not added. Frame:\t" + QString::number(frames.length());
-        strToLog += "\tSinc pos:\t" + QString::number(newFrame->sincPos);
-        strToLog += "\tDelta:\t" + QString::number((newFrame->sincPos-frames.last()->sincPos));
-        strToLog += "\tNumErr:\t" + QString::number(newFrame->frameErRate);
-        strToLog += "\tframeCNT\t:" + QString::number(newFrame->frameCNT);
+        strToLog += "\tSinc pos:\t" + QString::number(newFrame.sincPos);
+        strToLog += "\tDelta:\t" + QString::number((newFrame.sincPos-frames.last().sincPos));
+        strToLog += "\tNumErr:\t" + QString::number(newFrame.frameErRate);
+        strToLog += "\tframeCNT\t:" + QString::number(newFrame.frameCNT);
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //newFrame->data.clear();
-        //newFrame->data.squeeze();
-        //delete newFrame;
+        newFrame.data.clear();
+        newFrame.data.squeeze();
         return frames.length();
     }
     else // Если между позициями синхрокомбинаций две длины кадра и более
@@ -402,17 +388,15 @@ int frameSaver::appendFrame(QVector <sincFindRezSt*>* rezultsSinc)
         emit sendStrToLog(strToLog);
 
         strToLog = "frameSaver: Frame:\t" + QString::number(frames.length());
-        strToLog += "\tSinc pos:\t" + QString::number(newFrame->sincPos);
-        strToLog += "\tDelta:\t" + QString::number((newFrame->sincPos-frames.last()->sincPos));
-        strToLog += "\tNumErr:\t" + QString::number(newFrame->frameErRate);
-        strToLog += "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
+        strToLog += "\tSinc pos:\t" + QString::number(newFrame.sincPos);
+        strToLog += "\tDelta:\t" + QString::number((newFrame.sincPos-frames.last().sincPos));
+        strToLog += "\tNumErr:\t" + QString::number(newFrame.frameErRate);
+        strToLog += "\tframeCNT:\t" + QString::number(newFrame.frameCNT);
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
         frames.append(newFrame);
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //newFrame->data.clear();
-        //newFrame->data.squeeze();
-        //delete newFrame;
+        newFrame.data.clear();
+        newFrame.data.squeeze();
         return frames.length();
     }
 }
@@ -437,10 +421,9 @@ qint64 frameSaver::getCount(QVector <char>* vData)
 
 
 /*Добавление кадра с восстановленными синхрокомбинациями и нулевым заполнением*/
-frameSt * frameSaver::getBadFrame()
+frameSt frameSaver::getBadFrame()
 {
-    frameSt *badFrame; // Вставляемый кадр
-    badFrame = new frameSt;
+    frameSt badFrame; // Вставляемый кадр
     qint64 bufLen;
     // Цикл по синхрокомбинациям
     for (int i = 0; i < sincVect.length(); i++)
@@ -467,14 +450,14 @@ frameSt * frameSaver::getBadFrame()
             baddata.append(0);
     }
     // Заполнение кадра
-    badFrame->frameCNT = -1;
-    badFrame->data = bitToByte(baddata);
+    badFrame.frameCNT = -1;
+    badFrame.data = bitToByte(baddata);
     baddata.clear();
     baddata.squeeze();
-    badFrame->frameErRate = int(pow(2, 16));
-    badFrame->sincPos = frames.last()->sincPos + frameParam.lenFrame;
-    badFrame->countValidSign = false;
-    badFrame->timeFrameS.setHMS(0,0,0);
+    badFrame.frameErRate = int(pow(2, 16));
+    badFrame.sincPos = frames.last().sincPos + frameParam.lenFrame;
+    badFrame.countValidSign = false;
+    badFrame.timeFrameS.setHMS(0,0,0);
     return badFrame;
 }
 
@@ -494,27 +477,27 @@ void frameSaver::checkCount()
 
     // Основная ветка для хорошего сигнала
     // Проверка, является ли предыдущий счетчик валидным и равен ли инкремент 1
-    if (frames.at(frames.length()-2)->countValidSign &&
-            abs(int(frames.last()->frameCNT -
-                    frames.at(frames.length()-2)->frameCNT)) == 1)
+    if (frames.at(frames.length()-2).countValidSign &&
+            abs(int(frames.at(frames.length()-1).frameCNT -
+                    frames.at(frames.length()-2).frameCNT)) == 1)
     {
-        frames.last()->countValidSign = true;
+        frames.last().countValidSign = true;
         return;
     }
 
     // Ветка для первого раза или после сбоя
     // Проверка величины приращения счетчика в последних трех кадрах
-    if (abs(int(frames.last()->frameCNT - frames.at(frames.length()-2)->frameCNT)) != 1 ||
-            abs(int(frames.at(frames.length()-2)->frameCNT - frames.at(frames.length()-3)->frameCNT)) != 1 ||
-            abs(int(frames.at(frames.length()-3)->frameCNT - frames.at(frames.length()-4)->frameCNT)) != 1)
+    if (abs(int(frames.at(frames.length()-1).frameCNT - frames.at(frames.length()-2).frameCNT)) != 1 ||
+            abs(int(frames.at(frames.length()-2).frameCNT - frames.at(frames.length()-3).frameCNT)) != 1 ||
+            abs(int(frames.at(frames.length()-3).frameCNT - frames.at(frames.length()-4).frameCNT)) != 1)
         // Если счетчик рваный - сразу выход
         return;
     else
         // Если счетчик нормальный - присвоение признака валидности счетчика и погнали на анализ
     {
-        // Присвоение признака валидности счетчика трем кадрам
+        // Присвоение признака валидности счетчика четырем кадрам
         for (int i = -4; i < 0; i++)
-            frames[frames.length() + i]->countValidSign = true;
+            frames[frames.length() + i].countValidSign = true;
 
         // Поиск окна невалидности от конца
         int begInvalidWin = 0; // Начало окна невалидности счетчика
@@ -523,7 +506,7 @@ void frameSaver::checkCount()
         // Поиск endInvalidWin
         while (numCurFrame >= 0)
         {
-            if (frames.at(numCurFrame)->countValidSign == false)
+            if (frames.at(numCurFrame).countValidSign == false)
             {
                 endInvalidWin = numCurFrame;
                 break;
@@ -536,7 +519,7 @@ void frameSaver::checkCount()
         numCurFrame--;
         while (numCurFrame >= 0)
         {
-            if (frames.at(numCurFrame)->countValidSign == true)
+            if (frames.at(numCurFrame).countValidSign == true)
             {
                 begInvalidWin = numCurFrame + 1;
                 break;
@@ -548,7 +531,7 @@ void frameSaver::checkCount()
 
         // Проверка на количество вставленных кадров по счетчикам
         int diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
-                abs(int(frames.at(endInvalidWin + 1)->frameCNT - frames.at(begInvalidWin - 1)->frameCNT)); // Разность по счетчику
+                abs(int(frames.at(endInvalidWin + 1).frameCNT - frames.at(begInvalidWin - 1).frameCNT)); // Разность по счетчику
         // Если diffNumFrames = 0 - норма.
         if (diffNumFrames == 0)
         {
@@ -568,12 +551,12 @@ void frameSaver::checkCount()
             while (diffNumFrames < 0)
             {
                 // Проверка на объем
-                diffBitPos = frames.at(endInvalidWin + 1)->sincPos - frames.at(begInvalidWin - 1)->sincPos;
+                diffBitPos = frames.at(endInvalidWin + 1).sincPos - frames.at(begInvalidWin - 1).sincPos;
                 if ((frameParam.lenFrame * abs(diffNumFrames)) >
                         (diffBitPos * (1 + float(frameParam.offsetSincFail)/100)))
                 {
                     for (int i = -4; i < 0; i++)
-                        frames[frames.length() + i]->countValidSign = false;
+                        frames[frames.length() + i].countValidSign = false;
                     return;
                 }
                 // Добавление
@@ -590,12 +573,12 @@ void frameSaver::checkCount()
             while (diffNumFrames > 0)
             {
                 // Проверка на объем
-                diffBitPos = frames.at(endInvalidWin + 1)->sincPos - frames.at(begInvalidWin - 1)->sincPos;
+                diffBitPos = frames.at(endInvalidWin + 1).sincPos - frames.at(begInvalidWin - 1).sincPos;
                 if ((frameParam.lenFrame * abs(diffNumFrames)) <
                         (diffBitPos * (1 + float(frameParam.offsetSincFail)/100)))
                 {
                     for (int i = -4; i < 0; i++)
-                        frames[frames.length() + i]->countValidSign = false;
+                        frames[frames.length() + i].countValidSign = false;
                     return;
                 }
                 // Удаление
@@ -621,9 +604,9 @@ int frameSaver::findFirstMaxErr(int beg, int end)
     int indFrameMaxEr = beg;
     int maxErr = 0;
     for (int i = beg; i <= end; i++)
-        if (frames.at(i)->frameErRate > maxErr)
+        if (frames.at(i).frameErRate > maxErr)
         {
-            maxErr = frames.at(i)->frameErRate;
+            maxErr = frames.at(i).frameErRate;
             indFrameMaxEr = i;
         }
     return indFrameMaxEr;
@@ -633,40 +616,41 @@ int frameSaver::findFirstMaxErr(int beg, int end)
 void frameSaver::countRecovery(int beg, int end)
 {
     bool direction = true; // По умолчанию счетчик считает вперед
-    if (((frames.at(beg - 1)->frameCNT) - (frames.at(beg - 2)->frameCNT)) < 0)
+    if (((frames.at(beg - 1).frameCNT) - (frames.at(beg - 2).frameCNT)) < 0)
         direction = false;
+
     for (int i = beg; i <= end; i++)
         if (direction)
-            if ((frames.at(i - 1)->frameCNT + 1) > maxCountVal)
+            if ((frames.at(i - 1).frameCNT + 1) > maxCountVal)
             {
-                frames.at(i)->frameCNT = 0;
-                frames.at(i)->countValidSign = true;
+                frames[i].frameCNT = 0;
+                frames[i].countValidSign = true;
                 strToLog = "frameSaver: Recovery count: " + QString::number(0);
                 qDebug() << strToLog;
                 emit sendStrToLog(strToLog);
             }
             else
             {
-                frames.at(i)->frameCNT = frames.at(i - 1)->frameCNT + 1;
-                frames.at(i)->countValidSign = true;
-                strToLog = "frameSaver: Recovery count: " + QString::number(frames.at(i)->frameCNT);
+                frames[i].frameCNT = frames.at(i - 1).frameCNT + 1;
+                frames[i].countValidSign = true;
+                strToLog = "frameSaver: Recovery count: " + QString::number(frames.at(i).frameCNT);
                 qDebug() << strToLog;
                 emit sendStrToLog(strToLog);
             }
         else
-            if ((frames.at(i - 1)->frameCNT) == 0)
+            if ((frames.at(i - 1).frameCNT) == 0)
             {
-                frames.at(i)->frameCNT = maxCountVal;
-                frames.at(i)->countValidSign = true;
+                frames[i].frameCNT = maxCountVal;
+                frames[i].countValidSign = true;
                 strToLog = "frameSaver: Recovery count: " + QString::number(maxCountVal);
                 qDebug() << strToLog;
                 emit sendStrToLog(strToLog);
             }
             else
             {
-                frames.at(i)->frameCNT = frames.at(i - 1)->frameCNT - 1;
-                frames.at(i)->countValidSign = true;
-                strToLog = "frameSaver: Recovery count: " + QString::number(frames.at(i)->frameCNT);
+                frames[i].frameCNT = frames.at(i - 1).frameCNT - 1;
+                frames[i].countValidSign = true;
+                strToLog = "frameSaver: Recovery count: " + QString::number(frames.at(i).frameCNT);
                 qDebug() << strToLog;
                 emit sendStrToLog(strToLog);
             }
@@ -677,8 +661,8 @@ frameSaver::~frameSaver()
 {
     while (frames.length())
     {
-        frames.first()->data.clear();
-        frames.first()->data.squeeze();
+        frames.first().data.clear();
+        frames.first().data.squeeze();
         frames.takeFirst();
     }
     frames.clear();

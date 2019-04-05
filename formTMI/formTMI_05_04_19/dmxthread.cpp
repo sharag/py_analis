@@ -179,7 +179,7 @@ void DMXThread::run()
                 this,
                 SLOT(needSendError(QString)));
         for(int j = 0; j < frsavers.at(i)->frames.length(); j++)
-            fwriter->addData(frsavers.at(i)->frames.at(j)->data);
+            fwriter->addData(frsavers.at(i)->frames.at(j).data);
         delete fwriter;
     }
 
@@ -218,39 +218,39 @@ void DMXThread::run()
             countInDetect = false;
             countOutDetect = false;
             // Заполнение времени для первого кадра
-            curTime = frsavers.at(i)->frames.first()->sincPos * bitTime;
-            frsavers.at(i)->frames.first()->timeFrameS = inFreaders.at(i)->fBegTime.addMSecs(int(curTime));
+            curTime = frsavers.at(i)->frames.at(0).sincPos * bitTime;
+            frsavers[i]->frames.first().timeFrameS = inFreaders.at(i)->fBegTime.addMSecs(int(curTime));
             // Заполнение времени для всех остальных кадров
             for (int j = 1; j < frsavers.at(i)->frames.length(); j ++) // Цикл по кадрам
             {
                 // в файле нашли начало хорошего участка (2-ой кадр с валидным счетчиком)
-                if (frsavers.at(i)->frames.at(j)->countValidSign &&
-                       frsavers.at(i)->frames.at(j - 1)->countValidSign && !countInDetect)
+                if (frsavers.at(i)->frames.at(j).countValidSign &&
+                       frsavers.at(i)->frames.at(j - 1).countValidSign && !countInDetect)
                 {
                     countInDetect = true;
-                    if (frsavers.at(i)->frames.at(j - 1)->timeFrameS < minTime) // Поиск самого первого времени
-                        minTime = frsavers.at(i)->frames.at(j - 1)->timeFrameS;
+                    if (frsavers.at(i)->frames.at(j - 1).timeFrameS < minTime) // Поиск самого первого времени
+                        minTime = frsavers.at(i)->frames.at(j - 1).timeFrameS;
                 }
                 // Если после хорошего участка обнаружен плохой конец файла
-                if (countInDetect && !frsavers.at(i)->frames.at(j)->countValidSign)
+                if (countInDetect && !frsavers.at(i)->frames.at(j).countValidSign)
                 {
                     countOutDetect = true;
-                    if (maxTime < frsavers.at(i)->frames.at(j - 1)->timeFrameS)
-                        maxTime = frsavers.at(i)->frames.at(j - 1)->timeFrameS;
+                    if (maxTime < frsavers.at(i)->frames.at(j - 1).timeFrameS)
+                        maxTime = frsavers.at(i)->frames.at(j - 1).timeFrameS;
                 }
                 // Заполнение времени
                 if (!countInDetect || countOutDetect) // Если плохое начало или плохой конец
                 {
-                    curTime += (frsavers.at(i)->frames.at(j)->sincPos -
-                                        frsavers.at(i)->frames.at(j - 1)->sincPos) * bitTime;
-                    frsavers.at(i)->frames.at(j)->timeFrameS =
-                            frsavers.at(i)->frames.first()->timeFrameS.addMSecs(int(curTime));
+                    curTime += (frsavers.at(i)->frames.at(j).sincPos -
+                                        frsavers.at(i)->frames.at(j - 1).sincPos) * bitTime;
+                    frsavers.at(i)->frames[j].timeFrameS =
+                            frsavers.at(i)->frames.first().timeFrameS.addMSecs(int(curTime));
                 }
                 else
                 {
                     curTime += frameParam.lenFrame * bitTime;
-                    frsavers.at(i)->frames.at(j)->timeFrameS =
-                            frsavers.at(i)->frames.first()->timeFrameS.addMSecs(int(curTime));
+                    frsavers.at(i)->frames[j].timeFrameS =
+                            frsavers.at(i)->frames.first().timeFrameS.addMSecs(int(curTime));
                 }
                 // если попросили остановиться
                 if (needStopSign)
@@ -270,7 +270,7 @@ void DMXThread::run()
         diffTime = (maxTime.hour() - minTime.hour())*60*60 +
                 (maxTime.minute() - minTime.minute())*60 +
                 (maxTime.second() - minTime.second());
-        if (diffTime > 40*60)
+        if (diffTime > 30*60)
         {
             strToLog = "DMXThread: DiffTime > 30 minuts. Exit.";
             qDebug() << strToLog;
@@ -291,8 +291,8 @@ void DMXThread::run()
         // Поиск моментов времени для первых валидных кадров каждого кадрохранителя
         for (int i = 0; i < frsavers.length(); i++)
             for (int j = 0; j < frsavers.at(i)->frames.length(); j++)
-                if (frsavers.at(i)->frames.at(j)->countValidSign)
-                    begTimes.append(frsavers.at(i)->frames.at(j)->timeFrameS);
+                if (frsavers.at(i)->frames.at(j).countValidSign)
+                    begTimes.append(frsavers.at(i)->frames.at(j).timeFrameS);
         // Сортировка
         if (frsavers.length() >=2)
         {
@@ -345,7 +345,7 @@ void DMXThread::run()
         {
             for (int j = 0; j < frsavers.at(i)->frames.length(); j++) // Цикл по кадрам
             {
-                if (frsavers.at(i)->frames.at(j)->countValidSign)
+                if (frsavers.at(i)->frames.at(j).countValidSign)
                     outFrameSaver->appendFrame(frsavers.at(i)->frames.at(j));
                 // если попросили остановиться
                 if (needStopSign)
@@ -372,12 +372,12 @@ void DMXThread::run()
 
 
         // Окончательное восстановление времени
-        QTime GTSBegTime = outFrameSaver->frames.first()->timeFrameS;
+        QTime GTSBegTime = outFrameSaver->frames.first().timeFrameS;
         double timeLine = 0;
         for (int i = 1; i < outFrameSaver->frames.length(); i++)
         {
             timeLine += frameParam.lenFrame * bitTime;
-            outFrameSaver->frames.at(i)->timeFrameS = GTSBegTime.addMSecs(int(timeLine));
+            outFrameSaver->frames[i].timeFrameS = GTSBegTime.addMSecs(int(timeLine));
         }
 
         // Запись собранных кадров в файл
@@ -391,7 +391,7 @@ void DMXThread::run()
                 this,
                 SLOT(needSendError(QString)));
         for(int j = 0; j < outFrameSaver->frames.length(); j++)
-            fwriter->addData(outFrameSaver->frames.at(j)->data);
+            fwriter->addData(outFrameSaver->frames.at(j).data);
         delete fwriter;
 
         // Еще немного прогресса
@@ -414,10 +414,10 @@ void DMXThread::run()
 
         QString nextStr;
 
-        qint64 firstTime = outFrameSaver->frames.first()->timeFrameS.hour() * 60 * 60 * 1000 +
-                outFrameSaver->frames.first()->timeFrameS.minute() * 60 * 1000 +
-                outFrameSaver->frames.first()->timeFrameS.second() * 1000 +
-                outFrameSaver->frames.first()->timeFrameS.msec();
+        qint64 firstTime = outFrameSaver->frames.first().timeFrameS.hour() * 60 * 60 * 1000 +
+                outFrameSaver->frames.first().timeFrameS.minute() * 60 * 1000 +
+                outFrameSaver->frames.first().timeFrameS.second() * 1000 +
+                outFrameSaver->frames.first().timeFrameS.msec();
 
         int numSincBit = 0;
         for (int j = 0; j < sincVect.length(); j++)
@@ -427,15 +427,15 @@ void DMXThread::run()
 
         for (int j = 0; j < outFrameSaver->frames.length(); j++)
         {
-            qint64 secTime = outFrameSaver->frames.at(j)->timeFrameS.hour() * 60 * 60 * 1000 +
-                    outFrameSaver->frames.at(j)->timeFrameS.minute() * 60 * 1000 +
-                    outFrameSaver->frames.at(j)->timeFrameS.second() * 1000 +
-                    outFrameSaver->frames.at(j)->timeFrameS.msec();
+            qint64 secTime = outFrameSaver->frames.at(j).timeFrameS.hour() * 60 * 60 * 1000 +
+                    outFrameSaver->frames.at(j).timeFrameS.minute() * 60 * 1000 +
+                    outFrameSaver->frames.at(j).timeFrameS.second() * 1000 +
+                    outFrameSaver->frames.at(j).timeFrameS.msec();
             nextStr = QString::number(j) + "\t| " +
-                    QString::number(outFrameSaver->frames.at(j)->timeFrameS.hour()) + ":" +
-                    QString::number(outFrameSaver->frames.at(j)->timeFrameS.minute()) + ":" +
-                    QString::number(outFrameSaver->frames.at(j)->timeFrameS.second() +
-                                    double(outFrameSaver->frames.at(j)->timeFrameS.msec())/1000) + "\t| " +
+                    QString::number(outFrameSaver->frames.at(j).timeFrameS.hour()) + ":" +
+                    QString::number(outFrameSaver->frames.at(j).timeFrameS.minute()) + ":" +
+                    QString::number(outFrameSaver->frames.at(j).timeFrameS.second() +
+                                    double(outFrameSaver->frames.at(j).timeFrameS.msec())/1000) + "\t| " +
                     QString::number(double(secTime - firstTime)/1000) + "\t| " +
                     QString::number(getErRate(outFrameSaver,
                                               j,
@@ -471,7 +471,7 @@ double DMXThread::getErRate(frameSaver* frSaver,
 
     int summEr = 0;
     for (int i = begWin; i <= endWin; i++)
-        summEr += frSaver->frames.at(i)->frameErRate;
+        summEr += frSaver->frames.at(i).frameErRate;
     double erRate = double(summEr)/(numSyncBit * (endWin - begWin + 18));
     if (erRate > 1)
         erRate = 1;
