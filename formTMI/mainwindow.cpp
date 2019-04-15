@@ -31,26 +31,77 @@ void MainWindow::on_pushButtonOpenInDIR_clicked()
                 "Файлы ГТС (*.bit *.bi1)");
     if (!str.isEmpty())
     {
-        inFiles = str;
-        set_out_file_name(str);
         for (int i = 0; i < str.length(); i++)
             str[i] = QDir().toNativeSeparators(str.at(i));
-        ui->textEditInDIR->setText(str.join(QChar('\n')));
+        inFiles = str;
+        set_out_file_name(inFiles);
+        ui->textEditInDIR->setText(inFiles.join(QChar('\n')));
         ui->pushButtonStart->setEnabled(true);
     }
     return;
 }
 
 
+void MainWindow::addInFileNames(QStringList fileList)
+{
+    if (processingSign || fileList.isEmpty())
+        return;
+    int i = 0;
+    while (i < fileList.length())
+        if (fileList[i].split('.').last() == "bit" ||
+                fileList[i].split('.').last() == "bi1")
+            i++;
+        else
+            fileList.removeAt(i);
+    if (fileList.isEmpty())
+        return;
+
+    for (int i = 0; i < fileList.length(); i++)
+        fileList[i] = QDir().toNativeSeparators(fileList.at(i));
+    inFiles = fileList;
+    set_out_file_name(inFiles);
+    ui->textEditInDIR->setText(inFiles.join(QChar('\n')));
+    ui->pushButtonStart->setEnabled(true);
+    return;
+}
+
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasFormat("text/uri-list")) // Если формат url или имя файла
+    {
+        bool typeSign = false;
+        QList<QUrl> fileList = event->mimeData()->urls();
+        for (int i = 0; i < fileList.length(); i++)
+            if (fileList[i].toLocalFile().split('.').last() == "bit" ||
+                    fileList[i].toLocalFile().split('.').last() == "bi1")
+                typeSign = true;
+        if (typeSign) //Если внутри есть файлы с нужным расширением
+            event->acceptProposedAction(); // Разрешить перетаскивание
+    }
+}
+
+
+void MainWindow::dropEvent(QDropEvent* event)
+{
+    QList<QUrl> inList = event->mimeData()->urls();
+    if (inList.isEmpty())
+        return;
+    QStringList fileList;
+    for (int i = 0; i < inList.length(); i++)
+        fileList.append(inList.at(i).toLocalFile());
+    addInFileNames(fileList);
+}
+
 // Проверка корректности имени файла и заполнение поля выходного каталога
 void MainWindow::set_out_file_name(QStringList str)
 {
     QString outStr = str.at(0);
-    QStringList temp = outStr.split('/');
+    QStringList temp = outStr.split('\\');
     temp.removeAt(temp.length() - 1);
-    outStr = temp.join('/');
-    outStr.append('/');
-    outStr.append("out.bi1");
+    outStr = temp.join('\\');
+    outStr.append('\\');
+    outStr.append("gts.bi1");
     // в поле выводится каталог для создания под разуплотненные файлы
     ui->textEditRezDir->setText(QDir().toNativeSeparators(outStr));
     return;
@@ -98,7 +149,7 @@ void MainWindow::on_pushButtonStart_clicked()
         return;
     }
     // Синхрокомбинация
-    QVector <sincParamSt> sincVect;
+    QList <sincParamSt> sincVect;
     if (!getSinc(&sincVect,
                  frameParam.lenFrame))
         return;
@@ -144,6 +195,10 @@ void MainWindow::on_pushButtonStart_clicked()
             SIGNAL(sendError(QString)),
             this,
             SLOT(initError(QString)));
+    connect(commonDmx,
+            &DMXThread::finished,
+            commonDmx,
+            &QObject::deleteLater);
     // Настройка морды к обработке
     processingSign = true; // Признак существования процесса обработки
     ui->pushButtonStart->setText("Стоп");
@@ -154,7 +209,7 @@ void MainWindow::on_pushButtonStart_clicked()
 }
 
 
-bool MainWindow::getSinc(QVector <sincParamSt>* sincVect,
+bool MainWindow::getSinc(QList <sincParamSt>* sincVect,
                          int lenFrame)
 {
     //№1

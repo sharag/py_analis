@@ -14,8 +14,8 @@ class fileReader : public QObject
 public:
     fileReader(QString inFile_);
     ~fileReader();
-    QVector<char> getBits(qint64 posBit,
-                          qint64 lenBit);
+    QVector<char>* getBits(qint64 posBit,
+                           qint64 lenBit);
     qint64 getLastVollumReaded();
     bool inF_valid;
     int inF_size;
@@ -32,6 +32,7 @@ private:
     qint64 posBegBit;
     QVector<char> curBuff;
     QVector<char> rawBytes;
+    QVector<char> outBuff;
     qint64 lastReadVol;
     qint64 curReadVol;
     QString strToLog;

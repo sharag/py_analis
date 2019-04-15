@@ -9,27 +9,27 @@
 class sincFinder
 {
 public:
-    sincFinder(QVector <sincParamSt> sincVect_,
-               frameParamSt frameParam_,
+    sincFinder(QList <sincParamSt>* sincVect_,
+               frameParamSt* frameParam_,
                fileReader* inFReader_);
-    qint64 findNextFrame(qint64 startBit, QVector <sincFindRezSt*>* rezultsSinc);
+    qint64 findNextFrame(qint64 startBit,
+                         QList <sincFindRezSt*>* rezultsSinc);
 
 private:
-    QVector <sincParamSt> sincVect;
+    QList <sincParamSt>* sincVect;
     fileReader* inFReader;
-    frameParamSt frameParam;
+    frameParamSt* frameParam;
     qint64 syncPos;
     qint64 findNextSinc(int itSinc,
                         qint64 startBit,
-                        QVector <sincFindRezSt*>* rezultsSinc);
+                        QList <sincFindRezSt*>* rezultsSinc);
     bool checkFirst(int itSinc);
     bool checkLast(int itSinc);
     bool checkHam(QVector<char>* bufForVerify,
                   sincFindRezSt* rezultsSinc,
                   int itSinc,
                   int hamDist);
-    void deleteBuff(QVector<char> bufForVerify);
-    QVector<char> bufForVerify; // Текущий буффер для проверки
+    QVector<char>* bufForVerify; // Текущий буффер для проверки
 };
 
 #endif // SINCFINDER_H

@@ -28,6 +28,9 @@
     <height>16777215</height>
    </size>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -48,6 +51,9 @@
           <width>16777215</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Выбор исходных файлов ГТС для коррекции и совмещения.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -83,6 +89,9 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Исходные файлы ГТС.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -100,6 +109,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <spacer name="horizontalSpacer">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -115,6 +127,9 @@ p, li { white-space: pre-wrap; }
            </item>
            <item>
             <spacer name="verticalSpacer">
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
@@ -128,6 +143,9 @@ p, li { white-space: pre-wrap; }
            </item>
            <item>
             <widget class="QPushButton" name="pushButtonOpenInDIR">
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Выбор файлов ГТС.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -161,6 +179,9 @@ p, li { white-space: pre-wrap; }
           <height>16777215</height>
          </size>
         </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Настройка параметров кадрообразования.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -177,6 +198,9 @@ p, li { white-space: pre-wrap; }
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
               <widget class="QLabel" name="label_4">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Синхрокомбинация №1, 0b:</string>
                </property>
@@ -184,6 +208,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_8">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Позиция СК №1, бит:</string>
                </property>
@@ -191,6 +218,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_14">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Пороговое расстояние Хэмминга, бит:</string>
                </property>
@@ -198,6 +228,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_9">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Синхрокомбинация №2, 0b:</string>
                </property>
@@ -205,6 +238,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_5">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Позиция СК №2, бит:</string>
                </property>
@@ -212,6 +248,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_15">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Пороговое расстояние Хэмминга, бит:</string>
                </property>
@@ -219,6 +258,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_10">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Синхрокомбинация №3, 0b:</string>
                </property>
@@ -226,6 +268,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_11">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Позиция СК №3, бит:</string>
                </property>
@@ -233,6 +278,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_16">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Пороговое расстояние Хэмминга, бит:</string>
                </property>
@@ -240,6 +288,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_6">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Длина кадра, бит:</string>
                </property>
@@ -247,6 +298,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_7">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Длина канала, бит:</string>
                </property>
@@ -254,6 +308,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_18">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Частота следования кадров, кадр/с:</string>
                </property>
@@ -261,6 +318,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLabel" name="label_17">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Смещение срыва синхронизации, %:</string>
                </property>
@@ -272,6 +332,9 @@ p, li { white-space: pre-wrap; }
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>
               <widget class="QLineEdit" name="lineEditSinc1">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод синхрокомбинации.&lt;/p&gt;&lt;p&gt;Допускаются только символы &amp;quot;0&amp;quot; и &amp;quot;1&amp;quot;.&lt;/p&gt;&lt;p&gt;Последовательность не должна содержать пробелов.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -288,6 +351,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxSync1Pos">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод позиции синхрокомбинации в битах. Счет с 1.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -304,6 +370,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxHamDist1">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Расстояние Хэмминга (количество разрядов, в которых различаются сравниваемые битовые последовательности), при превышении которого принимается отрицательное решение об обнаружении синхрокомбинации.&lt;/p&gt;&lt;p&gt;Только для синхрокомбинации №1!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -320,6 +389,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLineEdit" name="lineEditSinc2">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод синхрокомбинации.&lt;/p&gt;&lt;p&gt;Допускаются только символы &amp;quot;0&amp;quot; и &amp;quot;1&amp;quot;.&lt;/p&gt;&lt;p&gt;Последовательность не должна содержать пробелов.&lt;/p&gt;&lt;p&gt;Если синхрокомбинация не определена, поле нужно оставить пустым.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -336,6 +408,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxSync2Pos">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод позиции синхрокомбинации в битах. Счет с 1.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -352,6 +427,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxHamDist2">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Расстояние Хэмминга (количество разрядов, в которых различаются сравниваемые битовые последовательности), при превышении которого принимается отрицательное решение об обнаружении синхрокомбинации.&lt;/p&gt;&lt;p&gt;Только для синхрокомбинации №2!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -368,6 +446,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QLineEdit" name="lineEditSinc3">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод синхрокомбинации.&lt;/p&gt;&lt;p&gt;Допускаются только символы &amp;quot;0&amp;quot; и &amp;quot;1&amp;quot;.&lt;/p&gt;&lt;p&gt;Последовательность не должна содержать пробелов.&lt;/p&gt;&lt;p&gt;Если синхрокомбинация не определена, поле нужно оставить пустым.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -384,6 +465,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxSync3Pos">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод позиции синхрокомбинации в битах. Счет с 1.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -400,6 +484,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxHamDist3">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Расстояние Хэмминга (количество разрядов, в которых различаются сравниваемые битовые последовательности), при превышении которого принимается отрицательное решение об обнаружении синхрокомбинации.&lt;/p&gt;&lt;p&gt;Только для синхрокомбинации №3!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -416,6 +503,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxLenFrame">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод длины кадра в битах.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -432,6 +522,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxLenChan">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод длины канала (количество разрядов) в битах.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -448,6 +541,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxFreqFrame">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод длины канала (количество разрядов) в битах.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -467,6 +563,9 @@ p, li { white-space: pre-wrap; }
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxOffsetSincFail">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Смещение срыва синхронизации в процентах относительно длины кадра.&lt;/p&gt;&lt;p&gt;При демодуляции телеметрического сигнала плохого качества происходят срывы тактовой синхронизации демодулятора, что приводит к потере/добавлению разрядов. &lt;/p&gt;&lt;p&gt;Данное значение определяет диапазон поиска очередной синхрокомбинации и влияет на включение потерянных кадров в общий поток.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -480,7 +579,7 @@ p, li { white-space: pre-wrap; }
                 <number>1</number>
                </property>
                <property name="value">
-                <number>5</number>
+                <number>10</number>
                </property>
               </widget>
              </item>
@@ -511,6 +610,9 @@ p, li { white-space: pre-wrap; }
           <height>106</height>
          </size>
         </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
         <property name="title">
          <string>Настройка совмещения файлов:</string>
         </property>
@@ -519,6 +621,9 @@ p, li { white-space: pre-wrap; }
           <layout class="QVBoxLayout" name="verticalLayout_9">
            <item>
             <widget class="QCheckBox" name="checkBoxJoinFrames">
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;При установке данного флага будет произведена сборка кадров ГТС в один файл  в последовательности, определенной счетчиком. Выбор кадра, присутствующего в разных файлах, осуществляется по наименьшему числу ошибок в синхрокомбинации.&lt;/p&gt;&lt;p&gt;Если на входе один файл, сборка осуществлена не будет.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -536,6 +641,9 @@ p, li { white-space: pre-wrap; }
               <layout class="QVBoxLayout" name="verticalLayout_10">
                <item>
                 <widget class="QLabel" name="label_12">
+                 <property name="acceptDrops">
+                  <bool>false</bool>
+                 </property>
                  <property name="text">
                   <string>Позиция счетчика, бит:</string>
                  </property>
@@ -543,6 +651,9 @@ p, li { white-space: pre-wrap; }
                </item>
                <item>
                 <widget class="QLabel" name="label_13">
+                 <property name="acceptDrops">
+                  <bool>false</bool>
+                 </property>
                  <property name="text">
                   <string>Разрядность счетчика, бит:</string>
                  </property>
@@ -554,6 +665,9 @@ p, li { white-space: pre-wrap; }
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
                 <widget class="QSpinBox" name="spinBoxCountPos">
+                 <property name="acceptDrops">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод позиции счетчика в битах. Счет с 1.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -570,6 +684,9 @@ p, li { white-space: pre-wrap; }
                </item>
                <item>
                 <spacer name="horizontalSpacer_2">
+                 <property name="acceptDrops">
+                  <bool>false</bool>
+                 </property>
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
@@ -583,6 +700,9 @@ p, li { white-space: pre-wrap; }
                </item>
                <item>
                 <widget class="QSpinBox" name="spinBoxCountLen">
+                 <property name="acceptDrops">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ввод разрядности счетчика в битах.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -620,6 +740,9 @@ p, li { white-space: pre-wrap; }
           <height>60</height>
          </size>
         </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Имя файла, содержащего обработанный ГТС.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -652,6 +775,9 @@ p, li { white-space: pre-wrap; }
                <height>23</height>
               </size>
              </property>
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Путь к файлу телеметрического сигнала&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -672,6 +798,9 @@ p, li { white-space: pre-wrap; }
         </property>
         <item>
          <widget class="QProgressBar" name="progressBar">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Прогресс обработки.&lt;/p&gt;&lt;p&gt;Скорость обработки может изменяться в зависимости от качества исходных файлов ГТС.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
@@ -682,6 +811,9 @@ p, li { white-space: pre-wrap; }
         </item>
         <item>
          <widget class="QPushButton" name="pushButtonStart">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Начать обработку.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>

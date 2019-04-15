@@ -107,10 +107,14 @@ fileReader::fileReader(QString inFile_)
 }
 
 
-QVector<char> fileReader::getBits(qint64 posBit,
+QVector<char>* fileReader::getBits(qint64 posBit,
                                   qint64 lenBit)
 {
-    QVector<char> outBuff;
+    if (outBuff.length())
+    {
+        outBuff.clear();
+        outBuff.squeeze();
+    }
 
     // Проверить, запрошенная длина превышает размер буффера
     // или запрашиваются биты вне файла
@@ -119,7 +123,7 @@ QVector<char> fileReader::getBits(qint64 posBit,
         strToLog = "fileReader: EOF " + inFname + ".";
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
-        return outBuff;
+        return &outBuff;
     }
     // Проверить все ли биты попали в диапазон posBegBit posEndBit
     // если нет - перечитать буффер
@@ -139,13 +143,13 @@ QVector<char> fileReader::getBits(qint64 posBit,
             strToLog = "fileReader: Read file error: " + inFname;
             emit sendStrToLog(strToLog);
             qDebug() << strToLog;
-            return outBuff;
+            return &outBuff;
         }
     }
     // Вырезаем требуемый кусок из буффера и отдаем
     outBuff = curBuff.mid(int(posBit - posBegBit),
                           int(lenBit));
-    return outBuff;
+    return &outBuff;
 }
 
 
@@ -184,9 +188,6 @@ int fileReader::fileReaderRead(int beginByte)
         curBuff.clear();
         curBuff.squeeze();
     }
-
-        //free(&curBuff);
-        //delete [] &curBuff[0];
     curBuff = byteToBit(rawBytes);
 
     rawBytes.clear();
@@ -197,7 +198,6 @@ int fileReader::fileReaderRead(int beginByte)
 
     // Сохранение информации о количестве прочитанных байт
     curReadVol = (beginByte + numByte);
-
     return -1;
 }
 
@@ -218,9 +218,21 @@ qint64 fileReader::getLastVollumReaded()
 
 fileReader::~fileReader()
 {
-    curBuff.clear();
-    curBuff.squeeze();
-    delete &curBuff;
+    if (curBuff.length())
+    {
+        curBuff.clear();
+        curBuff.squeeze();
+    }
+    if (rawBytes.length())
+    {
+        rawBytes.clear();
+        rawBytes.squeeze();
+    }
+    if (outBuff.length())
+    {
+        outBuff.clear();
+        outBuff.squeeze();
+    }
     qDebug() << "fileReader: fileReader object is destroed.";
     qDebug() << "fileReader: File name is :" << inFname;
 }

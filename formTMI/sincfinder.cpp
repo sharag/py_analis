@@ -4,7 +4,8 @@
 #include "common.h"
 
 
-int calc_hamming(QVector<char> *buff, QVector<char> *sinc)
+int calc_hamming(QVector<char> *buff,
+                 QVector<char> *sinc)
 {
     int dist = 0;
     for (int i = 0; i < buff->length(); i++)
@@ -14,8 +15,8 @@ int calc_hamming(QVector<char> *buff, QVector<char> *sinc)
 }
 
 
-sincFinder::sincFinder(QVector <sincParamSt> sincVect_,
-                       frameParamSt frameParam_,
+sincFinder::sincFinder(QList <sincParamSt>* sincVect_,
+                       frameParamSt* frameParam_,
                        fileReader* inFReader_)
 {
     sincVect = sincVect_;
@@ -27,7 +28,8 @@ sincFinder::sincFinder(QVector <sincParamSt> sincVect_,
 
 
 /*Возвращает позицию начала очередного кадра после startBit*/
-qint64 sincFinder::findNextFrame(qint64 startBit, QVector <sincFindRezSt*>* rezultsSinc)
+qint64 sincFinder::findNextFrame(qint64 startBit,
+                                 QList <sincFindRezSt*>* rezultsSinc)
 {
     int startNumSinc = 0;
     syncPos = findNextSinc(startNumSinc,
@@ -37,38 +39,28 @@ qint64 sincFinder::findNextFrame(qint64 startBit, QVector <sincFindRezSt*>* rezu
 }
 
 
-void sincFinder::deleteBuff(QVector<char> bufForVerify)
-{
-    bufForVerify.clear();
-    bufForVerify.squeeze();
-}
-
-
 /*Возвращает позицию очередной синхрокомбинации или -1
 -1 - это отсутствие СК на месте
 >=0 - позиция СК в кадре*/
 qint64 sincFinder::findNextSinc(int itSinc,
                                 qint64 startBit, // Номер искомой синхрокомбинации из вектора sincVect
-                                QVector <sincFindRezSt*>* rezultsSinc)
+                                QList <sincFindRezSt*>* rezultsSinc)
 {
-    int sincLen = sincVect.at(itSinc).sincVal->length(); // Длина синхрокомбинации
+    int sincLen = sincVect->at(itSinc).sincVal->length(); // Длина синхрокомбинации
     //QVector<char> bufForVerify(sincLen); // Текущий буффер для проверки
-    int hamDist = sincVect.at(itSinc).hammingDistVal; // Расстояние Хэмминга
-    int bitOffset = int(float(frameParam.offsetSincFail)/100*frameParam.lenFrame); // Смещение относительно startBit
+    int hamDist = sincVect->at(itSinc).hammingDistVal; // Расстояние Хэмминга
+    int bitOffset = int(float(frameParam->offsetSincFail)/100*frameParam->lenFrame); // Смещение относительно startBit
     qint64 curBitPos = 0; // Текущая позиция
     int sincOffset = 0; // Смещение позиций синхронизации друг относительно друга
     qint64 maxChildPos = startBit + bitOffset; // Позиция дочерней СК с максимальным смещением
 
     curBitPos = startBit;
     bufForVerify = inFReader->getBits(curBitPos, sincLen);
-    if (bufForVerify.length() != sincLen)
-    {
-        deleteBuff(bufForVerify);
+    if (bufForVerify->length() != sincLen)
         return -1;
-    }
 
     // Проверка на позиции startBit
-    if (checkHam(&bufForVerify,
+    if (checkHam(bufForVerify,
                  rezultsSinc->at(itSinc),
                  itSinc,
                  hamDist))
@@ -77,38 +69,33 @@ qint64 sincFinder::findNextSinc(int itSinc,
         if (checkLast(itSinc))
         {
             rezultsSinc->at(itSinc)->sincPos = curBitPos;
-            deleteBuff(bufForVerify);
             return curBitPos; // Возврат позиции
         }
         // Если СК не последняя - вызов рекурсии
         else
         {
-            sincOffset = sincVect.at(itSinc + 1).sincPos - sincVect.at(itSinc).sincPos;
+            sincOffset = sincVect->at(itSinc + 1).sincPos -
+                    sincVect->at(itSinc).sincPos;
             // Вызов рекурсии
             if (findNextSinc(itSinc + 1, curBitPos + sincOffset, rezultsSinc) > 0)
             {// Если дочерняя СК на месте - возврат позиции
                 rezultsSinc->at(itSinc)->sincPos = curBitPos;
-                deleteBuff(bufForVerify);
                 return curBitPos; // Возврат позиции
             }
         }
     }
-    deleteBuff(bufForVerify);
 
     // Если на позиции startBit СК не обнаружена
     curBitPos = startBit - bitOffset; // Отступ на (startBit-5%(lenFrame))
     if (curBitPos < 0) // Проверка, если мы в самом начале файла, то нельза запрашивать отрицательные значения
         curBitPos = 0;
     bufForVerify = inFReader->getBits(curBitPos, sincLen);
-    if (bufForVerify.length() != sincLen)
-    {
-        deleteBuff(bufForVerify);
+    if (bufForVerify->length() != sincLen)
         return -1;
-    }
     // Скольжение Цикл while
     while (true)
     {
-        if (checkHam(&bufForVerify,
+        if (checkHam(bufForVerify,
                      rezultsSinc->at(itSinc),
                      itSinc,
                      hamDist))
@@ -117,39 +104,31 @@ qint64 sincFinder::findNextSinc(int itSinc,
             if (checkLast(itSinc))
             {
                 rezultsSinc->at(itSinc)->sincPos = curBitPos;
-                deleteBuff(bufForVerify);
                 return curBitPos; // Возврат позиции
             }
             // Если СК не последняя - вызов рекурсии
             else
             {
-                sincOffset = sincVect.at(itSinc + 1).sincPos - sincVect.at(itSinc).sincPos;
+                sincOffset = sincVect->at(itSinc + 1).sincPos -
+                        sincVect->at(itSinc).sincPos;
                 // Вызов рекурсии
                 if (findNextSinc(itSinc + 1, curBitPos + sincOffset, rezultsSinc) > 0)
                 {
                     rezultsSinc->at(itSinc)->sincPos = curBitPos;
-                    deleteBuff(bufForVerify);
                     return curBitPos; // Если дочерняя СК на месте - возврат позиции
                 }
             }
         }
-        deleteBuff(bufForVerify);
 
         curBitPos++; // Изменение текущей позиции
         bufForVerify = inFReader->getBits(curBitPos, sincLen);
-        if (bufForVerify.length() != sincLen)
-        {
-            deleteBuff(bufForVerify);
+        if (bufForVerify->length() != sincLen)
             return -1;
-        }
         if (checkFirst(itSinc))
             continue;
         else
             if (curBitPos > maxChildPos)
-            {
-                deleteBuff(bufForVerify);
                 return -1;
-            }
     }
 }
 
@@ -165,7 +144,7 @@ bool sincFinder::checkFirst(int itSinc)
 
 bool sincFinder::checkLast(int itSinc)
 {
-    if (itSinc == (sincVect.length() - 1))
+    if (itSinc == (sincVect->length() - 1))
         return true;
     else
         return false;
@@ -177,14 +156,14 @@ bool sincFinder::checkHam(QVector<char>* bufForVerify,
                           int itSinc,
                           int hamDist)
 {
-    int factHam = calc_hamming(bufForVerify, sincVect.at(itSinc).sincVal);
+    int factHam = calc_hamming(bufForVerify, sincVect->at(itSinc).sincVal);
     if (factHam <= hamDist)
     {
         rezultsSinc->inverseSign = false;
         rezultsSinc->numErr = factHam;
         return true;
     }
-    factHam = calc_hamming(bufForVerify, sincVect.at(itSinc).sincValRev);
+    factHam = calc_hamming(bufForVerify, sincVect->at(itSinc).sincValRev);
     if (factHam <= hamDist)
     {
         rezultsSinc->inverseSign = true;

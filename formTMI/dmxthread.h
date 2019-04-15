@@ -17,7 +17,7 @@ public:
     DMXThread(QStringList inFlist_,
               QString outFname_,
               frameParamSt frameParam_,
-              QVector <sincParamSt> sincVect_,
+              QList <sincParamSt> sincVect_,
               countParamSt countParam_);
     void run();
     ~DMXThread();
@@ -30,19 +30,18 @@ public slots:
 private:
     QStringList inFlist;
     QString outFname, strToLog;
-    QVector <sincParamSt> sincVect;
+    QList <sincParamSt> sincVect;
     countParamSt countParam;
     frameParamSt frameParam;
     bool needStopSign = false;
-    QVector <sincFindRezSt*>* rezultsSinc;
-    QVector <fileReader*> inFreaders; // Массив указателей на файлочитатели (Нужно инициализировать сразу, чтобы выявить траблы с файлами)
-    QVector <frameSaver*> frsavers; // Массив указателей на кадрохранители
+    QList <sincFindRezSt*> rezultsSinc;
+    QList <fileReader*> inFreaders; // Массив указателей на файлочитатели (Нужно инициализировать сразу, чтобы выявить траблы с файлами)
+    QList <frameSaver*> frsavers; // Массив указателей на кадрохранители
     logWriter* logWriterObj;
     double getErRate(frameSaver* frSaver,
                      int ind,
                      int numSyncBit,
                      int winSize);
-
     QList<QTime> begTimes;
 
 signals:

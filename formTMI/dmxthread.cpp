@@ -23,7 +23,7 @@
 DMXThread::DMXThread(QStringList inFlist_,
                      QString outFname_,
                      frameParamSt frameParam_,
-                     QVector <sincParamSt> sincVect_,
+                     QList <sincParamSt> sincVect_,
                      countParamSt countParam_)
 {
     inFlist = inFlist_;
@@ -56,22 +56,22 @@ void DMXThread::run()
     QString fname; // Переменные для выплевывания на морды
 
     // Преобразование вектора параметров синхрокомбинации
-    rezultsSinc = new QVector <sincFindRezSt*>; // Попутно готовим вектор для результатов
+    //rezultsSinc = new QVector <sincFindRezSt*>; // Попутно готовим вектор для результатов
     for (int i = 0; i < sincVect.length(); i++)
     {
         QByteArray array = sincVect.at(i).sincStr.toLocal8Bit().data(); // Массив значений символов синхрокомбинации
         sincVect[i].sincVal = new QVector<char>(array.length());
-        for (int j = 0; j < sincVect[i].sincVal->length(); j++) // извлечение из QByteArray в QVector<char>
+        for (int j = 0; j < sincVect.at(i).sincVal->length(); j++) // извлечение из QByteArray в QVector<char>
             sincVect[i].sincVal->replace(j, (array.at(j) - '0'));
         sincVect[i].sincValRev = new QVector<char>(array.length());
-        for (int j = 0; j < sincVect[i].sincVal->length(); j++)
+        for (int j = 0; j < sincVect.at(i).sincVal->length(); j++)
             sincVect[i].sincValRev->replace(j, !(array.at(j) - '0'));
         // вектор для результатов
         sincFindRezSt* sincRez = new sincFindRezSt;
         sincRez->sincPos = 0;
         sincRez->inverseSign = false;
         sincRez->numErr = 0;
-        rezultsSinc->append(sincRez);
+        rezultsSinc.append(sincRez);
     }
 
     // Рассчет общего объема входных файлов и инициализация файлочитателей кадрохранителей
@@ -103,10 +103,10 @@ void DMXThread::run()
                 SLOT(needSendStrToLog(QString)));
         // Создание кадрохранителей
         frameSaver* frsaver = new frameSaver(inFreaders.at(i)->inFname,
-                                             frameParam,
+                                             &frameParam,
                                              inFreaders.at(i),
-                                             sincVect,
-                                             countParam);
+                                             &sincVect,
+                                             &countParam);
         frsavers.append(frsaver);
         connect(frsavers.at(i),
                 SIGNAL(sendStrToLog(QString)),
@@ -124,8 +124,8 @@ void DMXThread::run()
     for (int i = 0; i < inFreaders.length(); i++)
     {
         // Инициализация поисковика синхрокомбинации
-        sfinder = new sincFinder(sincVect,
-                                 frameParam,
+        sfinder = new sincFinder(&sincVect,
+                                 &frameParam,
                                  inFreaders.at(i));
         curBit = 0;
 
@@ -134,25 +134,27 @@ void DMXThread::run()
         while((curBit + frameParam.lenFrame) < (inFreaders.at(i)->inF_size * 8))
         {
             // Поиск всех синхрокомбинаций в кадре сразу. -1 - значит не нашел или файл закончился
-            if (sfinder->findNextFrame(curBit, rezultsSinc) < 0)
+            if (sfinder->findNextFrame(curBit, &rezultsSinc) < 0)
                 break;
             // Добавление очередного кадра. -1 - значит не нашел или файл закончился
-            if (frsavers.at(i)->appendFrame(rezultsSinc) < 0)
+            if (frsavers.at(i)->appendFrame(&rezultsSinc) < 0)
                 break;
             // Сообщение наверх
-            strToLog = "Файл: " + fname + ". Обнаружено кадров: ";
-            strToLog += QString::number(frsavers.at(i)->frames.length()) + ".";
-            emit sendNumFrames(strToLog);
-            // Подведение позиционера в файле
-            curBit = rezultsSinc->at(0)->sincPos + frameParam.lenFrame;
-            // Проценты
-            progrCurVol += inFreaders.at(i)->getLastVollumReaded();
-            if ((progrCurVol*100/progrAllVol - curPersent) > 1)
+            if ((frsavers.at(i)->frames.length() % 10) == 0)
             {
-                curPersent = int(progrCurVol*100 / progrAllVol);
                 strToLog = "Файл: " + fname + ". Обнаружено кадров: ";
                 strToLog += QString::number(frsavers.at(i)->frames.length()) + ".";
-                emit sendProgress(curPersent, strToLog);
+                emit sendNumFrames(strToLog);
+            }
+            // Подведение позиционера в файле
+            curBit = rezultsSinc.at(0)->sincPos + frameParam.lenFrame;
+            // Проценты
+            progrCurVol += inFreaders.at(i)->getLastVollumReaded();
+            if ((int(progrCurVol*100/progrAllVol) - curPersent) >= 1)
+            {
+                strToLog = "Файл: " + fname + ". Обнаружено кадров: ";
+                strToLog += QString::number(frsavers.at(i)->frames.length()) + ".";
+                emit sendProgress(++curPersent, strToLog);
             }
             // если попросили остановиться
             if (needStopSign)
@@ -164,7 +166,9 @@ void DMXThread::run()
                 return;
             }
         }
+        sfinder->~sincFinder();
         delete sfinder;
+
         lastVol += inFreaders.at(i)->inF_size;
         progrCurVol = lastVol;
 
@@ -180,7 +184,7 @@ void DMXThread::run()
                 SLOT(needSendError(QString)));
         for(int j = 0; j < frsavers.at(i)->frames.length(); j++)
             fwriter->addData(frsavers.at(i)->frames.at(j)->data);
-        delete fwriter;
+        fwriter->~fileWriter();
     }
 
     // Если не найден ни один кадр - удаление файлочитателя и кадрохранителя
@@ -189,8 +193,10 @@ void DMXThread::run()
     {
         if (frsavers.at(i)->frames.length() == 0)
         {
-            frsavers.remove(i);
-            inFreaders.remove(i);
+            frsavers.at(i)->~frameSaver();
+            frsavers.removeAt(i);
+            inFreaders.at(i)->~fileReader();
+            inFreaders.removeAt(i);
             continue;
         }
         i++;
@@ -218,8 +224,8 @@ void DMXThread::run()
             countInDetect = false;
             countOutDetect = false;
             // Заполнение времени для первого кадра
-            curTime = frsavers.at(i)->frames.first()->sincPos * bitTime;
-            frsavers.at(i)->frames.first()->timeFrameS = inFreaders.at(i)->fBegTime.addMSecs(int(curTime));
+            curTime = frsavers.at(i)->frames.at(0)->sincPos * bitTime;
+            frsavers[i]->frames.first()->timeFrameS = inFreaders.at(i)->fBegTime.addMSecs(int(curTime));
             // Заполнение времени для всех остальных кадров
             for (int j = 1; j < frsavers.at(i)->frames.length(); j ++) // Цикл по кадрам
             {
@@ -243,13 +249,13 @@ void DMXThread::run()
                 {
                     curTime += (frsavers.at(i)->frames.at(j)->sincPos -
                                         frsavers.at(i)->frames.at(j - 1)->sincPos) * bitTime;
-                    frsavers.at(i)->frames.at(j)->timeFrameS =
+                    frsavers.at(i)->frames[j]->timeFrameS =
                             frsavers.at(i)->frames.first()->timeFrameS.addMSecs(int(curTime));
                 }
                 else
                 {
                     curTime += frameParam.lenFrame * bitTime;
-                    frsavers.at(i)->frames.at(j)->timeFrameS =
+                    frsavers.at(i)->frames[j]->timeFrameS =
                             frsavers.at(i)->frames.first()->timeFrameS.addMSecs(int(curTime));
                 }
                 // если попросили остановиться
@@ -272,7 +278,7 @@ void DMXThread::run()
                 (maxTime.second() - minTime.second());
         if (diffTime > 40*60)
         {
-            strToLog = "DMXThread: DiffTime > 30 minuts. Exit.";
+            strToLog = "DMXThread: DiffTime > 40 minuts. Exit.";
             qDebug() << strToLog;
             emit sendStrToLog(strToLog);
             strToLog = "Зарегистрированный интервал превышает 30 минут. Сборка произведена не будет. ";
@@ -326,10 +332,10 @@ void DMXThread::run()
 
         // Начинаем собирать только те кадры, у которых правильный счетчик
         frameSaver* outFrameSaver = new frameSaver(inFreaders.at(0)->inFname,
-                                                   frameParam,
+                                                   &frameParam,
                                                    inFreaders.at(0),
-                                                   sincVect,
-                                                   countParam);
+                                                   &sincVect,
+                                                   &countParam);
         connect(outFrameSaver,
                 SIGNAL(sendStrToLog(QString)),
                 this,
@@ -354,12 +360,18 @@ void DMXThread::run()
                     qDebug() << strToLog;
                     emit sendStrToLog(strToLog);
                     emit sendStopped(true);
-                    delete outFrameSaver;
+                    outFrameSaver->~frameSaver();
                     return;
                 }
                 // Прогресс
+                if (outFrameSaver->frames.length() % 10 == 0)
+                {
+                    strToLog = "Собрано кадров: " + QString::number(outFrameSaver->frames.length()) + ".";
+                    emit sendProgress(curPersent, strToLog);
+                }
+
                 progrCurVol += 1;
-                if ((progrCurVol*100/progrAllVol - curPersent) > 1)
+                if ((progrCurVol*100/progrAllVol - curPersent) >= 1)
                 {
                     curPersent = int(progrCurVol*100 / progrAllVol);
                     if (curPersent == 100)
@@ -377,7 +389,7 @@ void DMXThread::run()
         for (int i = 1; i < outFrameSaver->frames.length(); i++)
         {
             timeLine += frameParam.lenFrame * bitTime;
-            outFrameSaver->frames.at(i)->timeFrameS = GTSBegTime.addMSecs(int(timeLine));
+            outFrameSaver->frames[i]->timeFrameS = GTSBegTime.addMSecs(int(timeLine));
         }
 
         // Запись собранных кадров в файл
@@ -392,7 +404,7 @@ void DMXThread::run()
                 SLOT(needSendError(QString)));
         for(int j = 0; j < outFrameSaver->frames.length(); j++)
             fwriter->addData(outFrameSaver->frames.at(j)->data);
-        delete fwriter;
+        fwriter->~fileWriter();
 
         // Еще немного прогресса
         curPersent = 100;
@@ -443,13 +455,10 @@ void DMXThread::run()
                                               frameParam.freqFrame/10)) + '\n';
             fwriter->addData(nextStr);
         }
-        delete fwriter;
-        delete outFrameSaver;
+        fwriter->~fileWriter();
+        outFrameSaver->~frameSaver();
     }
 
-    // Завершение работы
-    while (frsavers.length())
-        frsavers.removeFirst();
     strToLog = "DMXThread: out.";
     qDebug() << strToLog;
     emit sendStrToLog(strToLog);
@@ -501,23 +510,22 @@ void DMXThread::needSendStrToLog(QString str)
 
 DMXThread::~DMXThread()
 {
-    inFreaders.clear();
-    inFreaders.squeeze();
-    frsavers.clear();
-    frsavers.squeeze();
-    rezultsSinc->clear();
-    rezultsSinc->squeeze();
-    begTimes.clear();
-    while (sincVect.length())
+    while (!inFreaders.isEmpty())
     {
-        sincVect.first().sincVal->clear();
-        sincVect.first().sincVal->squeeze();
-        sincVect.first().sincValRev->clear();
-        sincVect.first().sincValRev->squeeze();
-        sincVect.takeFirst();
+        inFreaders.first()->~fileReader();
+        inFreaders.removeFirst();
+        continue;
     }
-
-    delete logWriterObj;
-
+    inFreaders.clear();
+    while (!frsavers.isEmpty())
+    {
+        frsavers.first()->~frameSaver();
+        frsavers.removeFirst();
+        continue;
+    }
+    frsavers.clear();
+    rezultsSinc.clear();
+    begTimes.clear();
+    logWriterObj->~logWriter();
     qDebug() << "DMXThread: Destructor.";
 }

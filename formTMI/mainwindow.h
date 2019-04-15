@@ -2,8 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <dmxthread.h>
+#include <QMimeData>
 #include "common.h"
-#include "dmxthread.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -28,10 +30,15 @@ private slots:
 private:
     Ui::MainWindow *ui;
     void set_out_file_name(QStringList str);
-    bool getSinc(QVector <sincParamSt>* sincVect, int lenFrame);
+    bool getSinc(QList <sincParamSt>* sincVect, int lenFrame);
     QStringList inFiles;
     bool processingSign = false;
     DMXThread * commonDmx;
+    void addInFileNames(QStringList fileList);
+
+protected:
+    void dragEnterEvent(QDragEnterEvent* event);
+    void dropEvent(QDropEvent* event);
 
 signals:
     void sendNeedStop(bool);

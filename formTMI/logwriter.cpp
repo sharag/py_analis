@@ -64,6 +64,7 @@ void logWriter::writeToFile()
 logWriter::~logWriter()
 {
     writeToFile();
+    logList.clear();
 }
 
 

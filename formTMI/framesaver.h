@@ -23,26 +23,28 @@ class frameSaver : public QObject
 
 public:
     frameSaver(QString fname_,
-               frameParamSt frameParam_,
+               frameParamSt* frameParam_,
                fileReader *fReader_,
-               QVector <sincParamSt> sincVect_,
-               countParamSt countParam_);
+               QList <sincParamSt>* sincVect_,
+               countParamSt* countParam_);
     ~frameSaver();
-    int appendFrame(QVector <sincFindRezSt*>* rezultsSinc);
+    int appendFrame(QList <sincFindRezSt*>* rezultsSinc);
     void appendFrame(frameSt* frame);
-    QVector <frameSt*> frames;
+    QList <frameSt*> frames;
     QString fname;
     int goalCountLen;
 
 private:
-    frameParamSt frameParam;
-    fileReader *fReader;
-    QVector <sincParamSt> sincVect;
-    countParamSt countParam;
+    frameSt* newFrame;
+    frameSt* badFrame;
+    frameParamSt* frameParam;
+    fileReader* fReader;
+    QList <sincParamSt>* sincVect;
+    countParamSt* countParam;
     QString strToLog;
     qint64 getCount(QVector <char>* vData);
     void checkCount();
-    frameSt * getBadFrame();
+    frameSt* getBadFrame();
     void countRecovery(int beg, int end);
     void addInterval(frameSt* frame);
     void addFrameInInt(frameSt* frame, int numInt, int pos);
@@ -51,10 +53,11 @@ private:
     QList <interval>* intervals;
     float bitTime; // Время на один бит в милисекундах
     qint64 maxCountVal;
+    //int getNumFrames(int winBeg, int winEnd);
 
-    QVector <char> data; // Массив под данные
-    QVector <char> baddata; // Массив под данные
-    QVector <char> tempData;
+    QVector <char>* data; // Массив под данные
+    QVector <char>* badData; // Массив под данные
+    QVector <char>* tempData;
 
 signals:
     //void sendError(QString);
