@@ -18,15 +18,15 @@ public:
                            qint64 lenBit);
     qint64 getLastVollumReaded();
     bool inF_valid;
-    int inF_size;
+    qint64 inF_size;
     QString inFname;
     QTime fBegTime;
 
 
 private:
     int fileReaderRead(int beginByte);
-    int volOfBuff; // Объем считываемых данных в байтах
-    int backOffset; // Смещение назад от заданной позиции
+    qint64 volOfBuff; // Объем считываемых данных в байтах
+    qint64 backOffset; // Смещение назад от заданной позиции
     QFile inQFile;
     qint64 posEndBit;
     qint64 posBegBit;

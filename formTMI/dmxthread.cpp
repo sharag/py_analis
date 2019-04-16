@@ -131,7 +131,7 @@ void DMXThread::run()
 
         // Цикл по кадрам в пределах одного файла
         fname = QFileInfo(QFile(inFreaders.at(i)->inFname)).fileName();
-        while((curBit + frameParam.lenFrame) < (inFreaders.at(i)->inF_size * 8))
+        while(curBit + frameParam.lenFrame < inFreaders.at(i)->inF_size * 8)
         {
             // Поиск всех синхрокомбинаций в кадре сразу. -1 - значит не нашел или файл закончился
             if (sfinder->findNextFrame(curBit, &rezultsSinc) < 0)
@@ -172,19 +172,22 @@ void DMXThread::run()
         lastVol += inFreaders.at(i)->inF_size;
         progrCurVol = lastVol;
 
-        // Запись обнаруженных кадров в файл
-        fwriter = new fileWriter(inFlist.at(i) + ".crt");
-        connect(fwriter,
-                SIGNAL(sendStrToLog(QString)),
-                this,
-                SLOT(needSendStrToLog(QString)));
-        connect(fwriter,
-                SIGNAL(sendError(QString)),
-                this,
-                SLOT(needSendError(QString)));
-        for(int j = 0; j < frsavers.at(i)->frames.length(); j++)
-            fwriter->addData(frsavers.at(i)->frames.at(j)->data);
-        fwriter->~fileWriter();
+        if (frsavers.at(i)->frames.length())
+        {
+            // Запись обнаруженных кадров в файл
+            fwriter = new fileWriter(inFlist.at(i) + ".crt");
+            connect(fwriter,
+                    SIGNAL(sendStrToLog(QString)),
+                    this,
+                    SLOT(needSendStrToLog(QString)));
+            connect(fwriter,
+                    SIGNAL(sendError(QString)),
+                    this,
+                    SLOT(needSendError(QString)));
+            for(int j = 0; j < frsavers.at(i)->frames.length(); j++)
+                fwriter->addData(frsavers.at(i)->frames.at(j)->data);
+            fwriter->~fileWriter();
+        }
     }
 
     // Если не найден ни один кадр - удаление файлочитателя и кадрохранителя
@@ -202,7 +205,13 @@ void DMXThread::run()
         i++;
     }
     if (frsavers.length() == 0)
+    {
+        strToLog = "DMXThread: Frames not finded. Emit signal stop.";
+        qDebug() << strToLog;
+        emit sendStrToLog(strToLog);
+        emit sendStopped(true);
         return;
+    }
 
     // Продолжение обработки - сборка из нескольких файлов
     if (countParam.joinFramesSign)
@@ -433,9 +442,7 @@ void DMXThread::run()
 
         int numSincBit = 0;
         for (int j = 0; j < sincVect.length(); j++)
-        {
             numSincBit += sincVect.at(j).sincStr.length();
-        }
 
         for (int j = 0; j < outFrameSaver->frames.length(); j++)
         {
@@ -478,10 +485,10 @@ double DMXThread::getErRate(frameSaver* frSaver,
     if (endWin > (frSaver->frames.length() - 1))
         endWin = (frSaver->frames.length() - 1);
 
-    int summEr = 0;
+    double summEr = 0;
     for (int i = begWin; i <= endWin; i++)
         summEr += frSaver->frames.at(i)->frameErRate;
-    double erRate = double(summEr)/(numSyncBit * (endWin - begWin + 18));
+    double erRate = summEr/(numSyncBit * (endWin - begWin + 1));
     if (erRate > 1)
         erRate = 1;
     return erRate;

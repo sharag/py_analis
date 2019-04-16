@@ -124,6 +124,9 @@ void frameSaver::appendFrame(frameSt* frame)
                 // Если в новом кадре меньше ошибок - замена кадра
                 if (frames.at(i)->frameErRate > frame->frameErRate)
                 {
+                    frames[i]->data.clear();
+                    frames[i]->data.squeeze();
+                    delete frames[i];
                     frames.replace(i, frame);
                     strToLog = "!!!Finded repeated frame: first frame: count " +
                             QString::number(frames.at(i)->frameCNT) + ", number of error " +

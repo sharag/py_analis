@@ -9,7 +9,7 @@
 struct sincParamSt
 {
     QString sincStr;
-    int sincPos;
+    qint64 sincPos;
     QVector <char>* sincVal;
     QVector <char>* sincValRev;
     int hammingDistVal;
@@ -47,7 +47,7 @@ struct frameParamSt
 {
     int lenWord;
     int lenFrame;
-    int offsetSincFail;
+    qint64 offsetSincFail;
     int freqFrame;
 };
 
