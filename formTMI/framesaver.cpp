@@ -126,8 +126,8 @@ void frameSaver::appendFrame(frameSt* frame)
                 {
                     frames[i]->data.clear();
                     frames[i]->data.squeeze();
-                    delete frames[i];
-                    frames.replace(i, frame);
+                    frames.removeAt(i);
+                    frames.insert(i, frame);
                     strToLog = "!!!Finded repeated frame: first frame: count " +
                             QString::number(frames.at(i)->frameCNT) + ", number of error " +
                             QString::number(frames.at(i)->frameErRate) +
@@ -539,9 +539,16 @@ void frameSaver::checkCount()
         return;
 
     // Проверка на количество вставленных кадров по счетчикам
-    int diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
-            abs(int(frames.at(endInvalidWin + 1)->frameCNT -
-                    frames.at(begInvalidWin - 1)->frameCNT)); // Разность по счетчику
+    int diffNumFrames;
+    if (frames.at(begInvalidWin - 1)->frameCNT > frames.at(endInvalidWin + 1)->frameCNT)
+        diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
+                abs(int(maxCountVal - frames.at(begInvalidWin - 1)->frameCNT +
+                        frames.at(endInvalidWin + 1)->frameCNT)); // Разность по счетчику
+    else
+        diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
+                abs(int(frames.at(endInvalidWin + 1)->frameCNT -
+                        frames.at(begInvalidWin - 1)->frameCNT)); // Разность по счетчику
+
     // Если diffNumFrames = 0 - норма.
     if (diffNumFrames == 0)
     {

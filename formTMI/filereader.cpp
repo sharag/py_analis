@@ -108,7 +108,7 @@ fileReader::fileReader(QString inFile_)
 
 
 QVector<char>* fileReader::getBits(qint64 posBit,
-                                  qint64 lenBit)
+                                   qint64 lenBit)
 {
     if (outBuff.length())
     {
@@ -160,9 +160,9 @@ int fileReader::fileReaderRead(int beginByte)
 
     // Проверить, не превышает ли volOfBuff оставшегося объема после beginByte
     if (volOfBuff > (inF_size - beginByte))
-        numByte = inF_size - beginByte;
+        numByte = int(inF_size) - beginByte;
     else
-        numByte = volOfBuff;
+        numByte = int(volOfBuff);
 
     // Открытие файла. Если нет - возврат пустого массива
     if (!inQFile.open(QIODevice::ReadOnly))
@@ -193,8 +193,8 @@ int fileReader::fileReaderRead(int beginByte)
     rawBytes.clear();
     rawBytes.squeeze();
 
-    posBegBit = beginByte * 8;
-    posEndBit = beginByte * 8 + numByte * 8;
+    posBegBit = qint64(beginByte) * 8;
+    posEndBit = qint64(beginByte) * 8 + qint64(numByte) * 8;
 
     // Сохранение информации о количестве прочитанных байт
     curReadVol = (beginByte + numByte);

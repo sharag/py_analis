@@ -51,7 +51,7 @@ qint64 sincFinder::findNextSinc(int itSinc,
     int hamDist = sincVect->at(itSinc).hammingDistVal; // Расстояние Хэмминга
     int bitOffset = int(float(frameParam->offsetSincFail)/100*frameParam->lenFrame); // Смещение относительно startBit
     qint64 curBitPos = 0; // Текущая позиция
-    int sincOffset = 0; // Смещение позиций синхронизации друг относительно друга
+    qint64 sincOffset = 0; // Смещение позиций синхронизации друг относительно друга
     qint64 maxChildPos = startBit + bitOffset; // Позиция дочерней СК с максимальным смещением
 
     curBitPos = startBit;

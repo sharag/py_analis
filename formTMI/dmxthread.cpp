@@ -133,6 +133,11 @@ void DMXThread::run()
         fname = QFileInfo(QFile(inFreaders.at(i)->inFname)).fileName();
         while(curBit + frameParam.lenFrame < inFreaders.at(i)->inF_size * 8)
         {
+            if (frsavers.at(i)->frames.length() == 146212)
+            {
+                strToLog = "Файл: " + fname + ". Обнаружено кадров: ";
+            }
+
             // Поиск всех синхрокомбинаций в кадре сразу. -1 - значит не нашел или файл закончился
             if (sfinder->findNextFrame(curBit, &rezultsSinc) < 0)
                 break;
