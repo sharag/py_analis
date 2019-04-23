@@ -226,7 +226,7 @@ int frameSaver::getNInterval(frameSt* frame)
     // Доверительный интервал в милисекундах
     int diffInt = int(frameParam->lenFrame *
                       pow(2, countParam->countLen) *
-                      (frameParam->offsetSincFail/100.) *
+                      double(frameParam->offsetSincFail) *
                       double(bitTime));
     for (int i = 0; i < intervals->length(); i++)
     {
@@ -296,8 +296,15 @@ int frameSaver::appendFrame(QList <sincFindRezSt*>* rezultsSinc)
     qint64 bufLen;
     qint64 curBitPos = 0;
     int numEr = 0;
+    bool countValidSign = false;
     data = new QVector <char>;
     tempData = new QVector<char>;
+
+    if (frames.length() == 2509)
+    {
+        qDebug() << "TUT";
+    }
+
     // Цикл по синхрокомбинациям
     for (int i = 0; i < sincVect->length(); i++)
     {
@@ -344,7 +351,7 @@ int frameSaver::appendFrame(QList <sincFindRezSt*>* rezultsSinc)
     data->squeeze();
 
     // Проверка на длину кадра
-    int numFr4add = 0;
+    double numFr4add = 0;
     // Примерное вычисление количества добавляемых кадров
     if (!frames.length()) // Если кадр первый, сразу записываем
     {
@@ -359,43 +366,42 @@ int frameSaver::appendFrame(QList <sincFindRezSt*>* rezultsSinc)
         return frames.length();
     }
     else // Если нет - считаем разность между позициями синхрокомбинаций
-        numFr4add = int(roundf(float(newFrame->sincPos -
-                                     frames.last()->sincPos)/
-                               frameParam->lenFrame));
+        numFr4add = double(newFrame->sincPos - frames.last()->sincPos)/frameParam->lenFrame;
 
     // Оценка приращения
-    if (numFr4add == 1) // Если между позициями синхрокомбинаций один кадр
+    if (fabs(numFr4add - 1) <= frameParam->offsetSincFail) // Если между позициями синхрокомбинаций один кадр
     {
-        strToLog = "frameSaver: Frame:\t" + QString::number(frames.length()) +
-                "\tSinc pos:\t" + QString::number(newFrame->sincPos) +
-                "\tDelta:\t" + QString::number((newFrame->sincPos - frames.last()->sincPos)) +
-                "\tNumErr:\t" + QString::number(newFrame->frameErRate) +
-                "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
-        qDebug() << strToLog;
-        emit sendStrToLog(strToLog);
+
         frames.append(newFrame);
         if (countParam->joinFramesSign)
-            checkCount();
-        return frames.length();
-    }
-    else if (numFr4add < 1) // Если существенно меньше кадра (невыполнимая ветка)
-    {
-        strToLog = "frameSaver: Frame not added. Frame:\t" + QString::number(frames.length()) +
+            countValidSign = checkCount();
+
+        strToLog = "frameSaver: Frame:\t" + QString::number(frames.length()) +
                 "\tSinc pos:\t" + QString::number(newFrame->sincPos) +
-                "\tDelta:\t" + QString::number((newFrame->sincPos - frames.last()->sincPos)) +
+                "\tDelta:\t" + QString::number((newFrame->sincPos - frames.last()->sincPos + frameParam->lenFrame)) +
                 "\tNumErr:\t" + QString::number(newFrame->frameErRate) +
-                "\tframeCNT\t:" + QString::number(newFrame->frameCNT);
+                "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
+        if (countValidSign)
+            strToLog += "\tcountValidSign:\ttrue";
+        else
+            strToLog += "\tcountValidSign:\tfalse";
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
+
         return frames.length();
     }
     else // Если между позициями синхрокомбинаций две длины кадра и более
     {// Здесь нет checkCount
         // Добавляем пропущенные кадры с нулевым заполнением
-        for (int i = 0; i < (numFr4add - 1); i++)// Цикл по количеству пропущенных кадров
-            // Добавление кадра
-            frames.append(getBadFrame());
-        strToLog = "frameSaver: Added " + QString::number(numFr4add - 1) + " bad frames!!!";
+        int numbadFr = 0;
+        while ((numFr4add - 1) > frameParam->offsetSincFail)
+        {
+            frames.append(getBadFrame());// Добавление кадра
+            numFr4add--;
+            numbadFr++;
+        }
+        //for (int i = 0; i < (numFr4add - 1); i++)// Цикл по количеству пропущенных кадров
+        strToLog = "frameSaver: Added " + QString::number(numbadFr) + " bad frames!!!";
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
 
@@ -404,6 +410,7 @@ int frameSaver::appendFrame(QList <sincFindRezSt*>* rezultsSinc)
                 "\tDelta:\t" + QString::number((newFrame->sincPos - frames.last()->sincPos)) +
                 "\tNumErr:\t" + QString::number(newFrame->frameErRate) +
                 "\tframeCNT:\t" + QString::number(newFrame->frameCNT);
+        strToLog += "\tcountValidSign:\tfalse";
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
         frames.append(newFrame);
@@ -481,12 +488,13 @@ frameSt* frameSaver::getBadFrame()
 то всем трем кадрам присваивается признак валидного счетчика.
     Затем скольжением к началу осуществляется локализация окна невалидности счетчика, контролируется
 правильность заполнения кадровой структуры, при необходимости - добавление/удаление сбойных кадров*/
-void frameSaver::checkCount()
+bool frameSaver::checkCount()
 {
+    int NFrBack = 5;
     // Входное условие
-    // Проверка frames.length() должна быть >= 3
-    if (frames.length() < 5)
-        return;
+    // Проверка frames.length() должна быть >= 8
+    if (frames.length() < NFrBack)
+        return false;
 
     // Основная ветка для хорошего сигнала
     // Проверка, является ли предыдущий счетчик валидным и равен ли инкремент 1
@@ -495,23 +503,23 @@ void frameSaver::checkCount()
                     frames.at(frames.length() - 2)->frameCNT)) == 1)
     {
         frames.last()->countValidSign = true;
-        return;
+        return true;
     }
 
     // Ветка для первого раза или после сбоя
     // Проверка величины приращения счетчика в последних пяти кадрах
-    for (int i = -4; i < 0; i++)
+    for (int i = -(NFrBack - 1); i < 0; i++)
         if (frames[frames.length() + i]->frameCNT -
                 frames[frames.length() + i - 1]->frameCNT != 1)
-            return;
+            return false;
     // Если все в порядке
     // Присвоение признака валидности счетчика пяти кадрам
-    for (int i = -5; i < 0; i++)
+    for (int i = -NFrBack; i < 0; i++)
         frames[frames.length() + i]->countValidSign = true;
     // Поиск окна невалидности от конца
     int begInvalidWin = 0; // Начало окна невалидности счетчика
     int endInvalidWin = 0; // Конец окна невалидности счетчика
-    int numCurFrame = frames.length() - 5; // Номер текущего кадра
+    int numCurFrame = frames.length() - NFrBack; // Номер текущего кадра
     // Поиск endInvalidWin
     while (numCurFrame >= 0)
     {
@@ -523,7 +531,7 @@ void frameSaver::checkCount()
         numCurFrame--;
     }
     if (!endInvalidWin)
-        return;
+        return false;
     // Поиск begInvalidWin
     numCurFrame--;
     while (numCurFrame >= 0)
@@ -536,105 +544,80 @@ void frameSaver::checkCount()
         numCurFrame--;
     }
     if (!begInvalidWin)
-        return;
+        return false;
 
     // Проверка на количество вставленных кадров по счетчикам
-    int diffNumFrames;
-    if (frames.at(begInvalidWin - 1)->frameCNT > frames.at(endInvalidWin + 1)->frameCNT)
-        diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
-                abs(int(maxCountVal - frames.at(begInvalidWin - 1)->frameCNT +
-                        frames.at(endInvalidWin + 1)->frameCNT)); // Разность по счетчику
-    else
-        diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
-                abs(int(frames.at(endInvalidWin + 1)->frameCNT -
-                        frames.at(begInvalidWin - 1)->frameCNT)); // Разность по счетчику
+    int diffNumFrames = int(endInvalidWin - begInvalidWin) + 2 - //Величина окна
+            getNumLostFr(begInvalidWin, endInvalidWin); // Разность по счетчику
 
     // Если diffNumFrames = 0 - норма.
     if (diffNumFrames == 0)
     {
         countRecovery(begInvalidWin, endInvalidWin);
-        return;
+        return true;
     }
     // Если diffNumFrames < 0 - нужно вставить diffNumFrames кадров.
     int indFrameMaxEr;
-    //qint64 diffBitPos;
+    qint64 diffBitPos;
     if (diffNumFrames < 0)
     {
+        // Проверка на объем
+        diffBitPos = frames.at(endInvalidWin + 1)->sincPos -
+                frames.at(begInvalidWin - 1)->sincPos;
+        if ((frameParam->lenFrame * getNumLostFr(begInvalidWin, endInvalidWin)) >
+                (diffBitPos * (frameParam->offsetSincFail + 1)))
+        {
+            for (int i = -NFrBack; i < 0; i++)
+                frames[frames.length() + i]->countValidSign = false;
+            return false;
+        }
+
         indFrameMaxEr = findFirstMaxErr(begInvalidWin, endInvalidWin);
         strToLog = "frameSaver: From COUNT added " + QString::number(abs(diffNumFrames))
                 + " bad frames in place " + QString::number(indFrameMaxEr);
         qDebug() << strToLog;
         emit sendStrToLog(strToLog);
-        while (diffNumFrames < 0)
+
+        while (diffNumFrames < 0) // Добавление
         {
-            // Проверка на объем
-            /*diffBitPos = frames.at(endInvalidWin + 1)->sincPos -
-                    frames.at(begInvalidWin - 1)->sincPos;
-            if ((frameParam->lenFrame * getNumFrames(begInvalidWin, endInvalidWin)) >
-                    (diffBitPos * (1 + float(frameParam->offsetSincFail)/100)))
-            {
-                for (int i = -5; i < 0; i++)
-                    frames[frames.length() + i]->countValidSign = false;
-                return;
-            }*/
-            // Добавление
             frames.insert(indFrameMaxEr, getBadFrame());
             endInvalidWin++;
             diffNumFrames++;
         }
         countRecovery(begInvalidWin, endInvalidWin);
-        return;
+        return true;
     }
     // Если diffNumFrames > 0 - нужно удалить diffNumFrames кадров.
-    if (diffNumFrames > 0)
+    else
     {
         while (diffNumFrames > 0)
         {
-            // Проверка на объем
-            /*diffBitPos = frames.at(endInvalidWin + 1)->sincPos -
-                    frames.at(begInvalidWin - 1)->sincPos;
-            if ((frameParam->lenFrame * getNumFrames(begInvalidWin, endInvalidWin)) <
-                    (diffBitPos * (1 + float(frameParam->offsetSincFail)/100)))
-            {
-                for (int i = -5; i < 0; i++)
-                    frames[frames.length() + i]->countValidSign = false;
-                return;
-            }*/
             // Удаление
             indFrameMaxEr = findFirstMaxErr(begInvalidWin, endInvalidWin);
             frames.at(indFrameMaxEr)->data.clear();
             frames.at(indFrameMaxEr)->data.squeeze();
             frames.removeAt(indFrameMaxEr);
             endInvalidWin--;
-            strToLog = "frameSaver: From COUNT deleted frame " + QString::number(indFrameMaxEr) +
+            strToLog = "frameSaver: From COUNT deleted frame: " + QString::number(indFrameMaxEr) +
                     ".\tNum frames:" + QString::number(frames.length());
             qDebug() << strToLog;
             emit sendStrToLog(strToLog);
             diffNumFrames--;
         }
         countRecovery(begInvalidWin, endInvalidWin);
-        return;
+        return true;
     }
 }
 
 
-/*int frameSaver::getNumFrames(int winBeg, int winEnd)
+int frameSaver::getNumLostFr(int winBeg, int winEnd)
 {
-    int diff = 0;
-    if (winEnd > winBeg)
-        diff = abs(int(frames.at(winEnd + 1)->frameCNT -
-                       frames.at(winBeg - 1)->frameCNT));
-    else
-        diff = abs(int((maxCountVal - frames.at(winBeg - 1)->frameCNT) + frames.at(winEnd + 1)->frameCNT));
-    return diff;*/
-
-    /*
     if (winEnd > winBeg)
         return abs(int(frames.at(winEnd + 1)->frameCNT -
                        frames.at(winBeg - 1)->frameCNT));
     else
-        return abs(int((maxCountVal - frames.at(winBeg - 1)->frameCNT) + frames.at(winEnd + 1)->frameCNT));*/
-/*}*/
+        return abs(int((maxCountVal - frames.at(winBeg - 1)->frameCNT) + frames.at(winEnd + 1)->frameCNT));
+}
 
 
 /*Поиск индекса первого элемента с максимальным количеством ошибок в заданном диапазоне*/

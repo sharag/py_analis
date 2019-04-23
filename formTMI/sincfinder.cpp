@@ -49,7 +49,7 @@ qint64 sincFinder::findNextSinc(int itSinc,
     int sincLen = sincVect->at(itSinc).sincVal->length(); // Длина синхрокомбинации
     //QVector<char> bufForVerify(sincLen); // Текущий буффер для проверки
     int hamDist = sincVect->at(itSinc).hammingDistVal; // Расстояние Хэмминга
-    int bitOffset = int(float(frameParam->offsetSincFail)/100*frameParam->lenFrame); // Смещение относительно startBit
+    int bitOffset = int(frameParam->offsetSincFail*frameParam->lenFrame); // Смещение относительно startBit
     qint64 curBitPos = 0; // Текущая позиция
     qint64 sincOffset = 0; // Смещение позиций синхронизации друг относительно друга
     qint64 maxChildPos = startBit + bitOffset; // Позиция дочерней СК с максимальным смещением

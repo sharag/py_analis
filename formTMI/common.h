@@ -47,7 +47,7 @@ struct frameParamSt
 {
     int lenWord;
     int lenFrame;
-    qint64 offsetSincFail;
+    double offsetSincFail;
     int freqFrame;
 };
 

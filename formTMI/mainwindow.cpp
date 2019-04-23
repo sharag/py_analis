@@ -139,7 +139,7 @@ void MainWindow::on_pushButtonStart_clicked()
     QString outFname = ui->textEditRezDir->document()->toPlainText();
     frameParam.lenWord = ui->spinBoxLenChan->value();//Длина слова
     frameParam.lenFrame = ui->spinBoxLenFrame->value();//Длина кадра
-    frameParam.offsetSincFail = ui->spinBoxOffsetSincFail->value(); // Смещение срыва синхронизации
+    frameParam.offsetSincFail = float(ui->spinBoxOffsetSincFail->value())/100; // Смещение срыва синхронизации
     frameParam.freqFrame = ui->spinBoxFreqFrame->value(); // Частота следования кадров
     if (frameParam.lenFrame % frameParam.lenWord)//Если существует остаток от деления на длину слова
     {

@@ -43,7 +43,7 @@ private:
     countParamSt* countParam;
     QString strToLog;
     qint64 getCount(QVector <char>* vData);
-    void checkCount();
+    bool checkCount();
     frameSt* getBadFrame();
     void countRecovery(int beg, int end);
     void addInterval(frameSt* frame);
@@ -53,7 +53,7 @@ private:
     QList <interval>* intervals;
     float bitTime; // Время на один бит в милисекундах
     qint64 maxCountVal;
-    //int getNumFrames(int winBeg, int winEnd);
+    int getNumLostFr(int winBeg, int winEnd);
 
     QVector <char>* data; // Массив под данные
     QVector <char>* badData; // Массив под данные

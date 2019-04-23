@@ -131,13 +131,12 @@ void DMXThread::run()
 
         // Цикл по кадрам в пределах одного файла
         fname = QFileInfo(QFile(inFreaders.at(i)->inFname)).fileName();
+
+        strToLog = "\n\nFile: " + fname + "\n\n";
+        emit sendStrToLog(strToLog);
+
         while(curBit + frameParam.lenFrame < inFreaders.at(i)->inF_size * 8)
         {
-            if (frsavers.at(i)->frames.length() == 146212)
-            {
-                strToLog = "Файл: " + fname + ". Обнаружено кадров: ";
-            }
-
             // Поиск всех синхрокомбинаций в кадре сразу. -1 - значит не нашел или файл закончился
             if (sfinder->findNextFrame(curBit, &rezultsSinc) < 0)
                 break;
@@ -179,6 +178,8 @@ void DMXThread::run()
 
         if (frsavers.at(i)->frames.length())
         {
+            strToLog = "Сохранение файла " + inFlist.at(i) + ".crt...";
+            emit sendNumFrames(strToLog);
             // Запись обнаруженных кадров в файл
             fwriter = new fileWriter(inFlist.at(i) + ".crt");
             connect(fwriter,
@@ -221,9 +222,13 @@ void DMXThread::run()
     // Продолжение обработки - сборка из нескольких файлов
     if (countParam.joinFramesSign)
     {
+
+        strToLog = "\n\nAssembling GTS.\n\n";
+        emit sendStrToLog(strToLog);
+
         // Обнуление прогресс бара и вывод статуса - сборка
         strToLog = "Привязка обнаруженных кадров ко времени...";
-        emit sendProgress(0, strToLog);
+        emit sendNumFrames(strToLog);
 
         // Заполнение времени для каждого кадра каждого файла
         // А также оценка временного интервала между первым и последним кадрами
@@ -398,6 +403,8 @@ void DMXThread::run()
 
 
         // Окончательное восстановление времени
+        strToLog = "Проверка шкалы времени...";
+        emit sendNumFrames(strToLog);
         QTime GTSBegTime = outFrameSaver->frames.first()->timeFrameS;
         double timeLine = 0;
         for (int i = 1; i < outFrameSaver->frames.length(); i++)
@@ -408,6 +415,10 @@ void DMXThread::run()
 
         // Запись собранных кадров в файл
         fwriter = new fileWriter(QFileInfo(QFile(inFreaders.at(0)->inFname)).path() + "/gts.bi1");
+
+        strToLog = "Сохранение ГТС в файл: " + QFileInfo(QFile(inFreaders.at(0)->inFname)).path() + "/gts.bi1...";
+        emit sendNumFrames(strToLog);
+
         connect(fwriter,
                 SIGNAL(sendStrToLog(QString)),
                 this,
@@ -429,6 +440,10 @@ void DMXThread::run()
         // Запись доп файла
         // № по порядку | абсолютное время (чч:мм:сс.ссс) | относительное аремя (в мс) | качество (вероятность ошибки на бит)
         fwriter = new fileWriter(QFileInfo(QFile(inFreaders.at(0)->inFname)).path() + "/gts.info");
+
+        strToLog = "Сохранение файла: " + QFileInfo(QFile(inFreaders.at(0)->inFname)).path() + "/gts.info...";
+        emit sendNumFrames(strToLog);
+
         connect(fwriter,
                 SIGNAL(sendStrToLog(QString)),
                 this,

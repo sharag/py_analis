@@ -383,7 +383,7 @@ p, li { white-space: pre-wrap; }
                 <number>1</number>
                </property>
                <property name="value">
-                <number>4</number>
+                <number>3</number>
                </property>
               </widget>
              </item>
@@ -440,7 +440,7 @@ p, li { white-space: pre-wrap; }
                 <number>1</number>
                </property>
                <property name="value">
-                <number>4</number>
+                <number>3</number>
                </property>
               </widget>
              </item>
@@ -497,7 +497,7 @@ p, li { white-space: pre-wrap; }
                 <number>1</number>
                </property>
                <property name="value">
-                <number>4</number>
+                <number>3</number>
                </property>
               </widget>
              </item>
@@ -579,7 +579,7 @@ p, li { white-space: pre-wrap; }
                 <number>1</number>
                </property>
                <property name="value">
-                <number>10</number>
+                <number>20</number>
                </property>
               </widget>
              </item>
